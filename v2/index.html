@@ -536,9 +536,9 @@
   el("jsonBtn").addEventListener("click",function(){
     var data;try{data=JSON.parse(el("jsonBox").value);}catch(e){el("jsonResult").textContent="Invalid JSON: "+e.message;return;}
     var map={},nE=0,nV=0,nC=0;
-    (data.events||[]).forEach(function(e){var id=genId();if(e.tmp)map[e.tmp]=id;put("events",id,{personId:e.personId,type:e.type,title:e.title,onsetDate:e.onsetDate,status:e.status||"open"});nE++;});
-    (data.visits||[]).forEach(function(v){var id=genId();if(v.tmp)map[v.tmp]=id;put("visits",id,{eventId:map[v.event]||v.eventId||"",date:v.date,visitType:v.visitType,provider:v.provider||"",providerId:v.provider?ensureProvider(v.provider):"",outOfPocket:v.outOfPocket||0,miles:v.miles||0,notes:v.notes||""});nV++;});
-    (data.claims||[]).forEach(function(c){var vid=map[c.visit]||c.visitId||"";var paid=c.status==="paid";put("claims",genId(),{visitId:vid,policyId:c.policyId,benefitKey:c.benefitKey||"",benefitLabel:c.benefitLabel,expectedAmount:c.expectedAmount,status:c.status||"to_file",filedDate:c.filedDate||(paid?(c.payoutDate||""):""),filingDeadline:c.filingDeadline||"",payoutAmount:paid?(c.payoutAmount||c.expectedAmount):0,payoutDate:paid?(c.payoutDate||""):"",denialReason:""});nC++;});
+    (data.events||[]).forEach(function(e){var id=e.id||genId();if(e.tmp)map[e.tmp]=id;put("events",id,{personId:e.personId,type:e.type,title:e.title,onsetDate:e.onsetDate,status:e.status||"open"});nE++;});
+    (data.visits||[]).forEach(function(v){var id=v.id||genId();if(v.tmp)map[v.tmp]=id;put("visits",id,{eventId:map[v.event]||v.eventId||"",date:v.date,visitType:v.visitType,provider:v.provider||"",providerId:v.provider?ensureProvider(v.provider):"",outOfPocket:v.outOfPocket||0,miles:v.miles||0,notes:v.notes||""});nV++;});
+    (data.claims||[]).forEach(function(c){var vid=map[c.visit]||c.visitId||"";var paid=c.status==="paid";put("claims",c.id||genId(),{visitId:vid,policyId:c.policyId,benefitKey:c.benefitKey||"",benefitLabel:c.benefitLabel,expectedAmount:c.expectedAmount,status:c.status||"to_file",filedDate:c.filedDate||(paid?(c.payoutDate||""):""),filingDeadline:c.filingDeadline||"",payoutAmount:paid?(c.payoutAmount||c.expectedAmount):0,payoutDate:paid?(c.payoutDate||""):"",denialReason:""});nC++;});
     el("jsonResult").textContent="Imported "+nE+" events, "+nV+" visits, "+nC+" claims ✓";el("jsonBox").value="";
   });
 
