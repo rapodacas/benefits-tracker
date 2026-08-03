@@ -180,6 +180,13 @@
       <button class="btn sec sm" id="csvBtn" style="margin-top:8px">Import pasted rows</button>
       <div class="small muted" id="csvResult" style="margin-top:6px"></div>
     </div>
+    <h2 class="sec">📥 Import records (JSON)</h2>
+    <div class="card">
+      <p class="small muted" style="margin:0 0 8px">Paste a records blob (events/visits/claims) to load into <b>your</b> Firebase. Used to bring in prepared history.</p>
+      <textarea class="in" id="jsonBox" placeholder='{"events":[...],"visits":[...],"claims":[...]}'></textarea>
+      <button class="btn sec sm" id="jsonBtn" style="margin-top:8px">Import JSON</button>
+      <div class="small muted" id="jsonResult" style="margin-top:6px"></div>
+    </div>
     <div class="card">
       <div class="lb small" style="font-weight:800;text-transform:uppercase;color:var(--ink2)">Account</div>
       <p class="small muted" id="syncLine" style="margin:6px 0 10px">—</p>
@@ -523,6 +530,16 @@
       var st=/yes/.test(status)?"paid":"to_file";
       put("claims",genId(),{visitId:vid,policyId:"af-cancer",benefitKey:mb.bk,benefitLabel:(benefitByKey(policyById("af-cancer")||{benefitSchedule:[]},mb.bk)||{label:mb.bk}).label,expectedAmount:amt,status:st,filedDate:st==="paid"?date:"",filingDeadline:addDays(date,90),payoutAmount:st==="paid"?amt:0,payoutDate:st==="paid"?date:"",denialReason:""});cN++;});
     el("csvResult").textContent="Imported "+vN+" visits, "+cN+" claims into the cancer event. ✓";el("csvBox").value="";
+  });
+
+  /* ---- JSON import (events/visits/claims with tmp refs) ---- */
+  el("jsonBtn").addEventListener("click",function(){
+    var data;try{data=JSON.parse(el("jsonBox").value);}catch(e){el("jsonResult").textContent="Invalid JSON: "+e.message;return;}
+    var map={},nE=0,nV=0,nC=0;
+    (data.events||[]).forEach(function(e){var id=genId();if(e.tmp)map[e.tmp]=id;put("events",id,{personId:e.personId,type:e.type,title:e.title,onsetDate:e.onsetDate,status:e.status||"open"});nE++;});
+    (data.visits||[]).forEach(function(v){var id=genId();if(v.tmp)map[v.tmp]=id;put("visits",id,{eventId:map[v.event]||v.eventId||"",date:v.date,visitType:v.visitType,provider:v.provider||"",providerId:v.provider?ensureProvider(v.provider):"",outOfPocket:v.outOfPocket||0,miles:v.miles||0,notes:v.notes||""});nV++;});
+    (data.claims||[]).forEach(function(c){var vid=map[c.visit]||c.visitId||"";var paid=c.status==="paid";put("claims",genId(),{visitId:vid,policyId:c.policyId,benefitKey:c.benefitKey||"",benefitLabel:c.benefitLabel,expectedAmount:c.expectedAmount,status:c.status||"to_file",filedDate:c.filedDate||(paid?(c.payoutDate||""):""),filingDeadline:c.filingDeadline||"",payoutAmount:paid?(c.payoutAmount||c.expectedAmount):0,payoutDate:paid?(c.payoutDate||""):"",denialReason:""});nC++;});
+    el("jsonResult").textContent="Imported "+nE+" events, "+nV+" visits, "+nC+" claims ✓";el("jsonBox").value="";
   });
 
   /* ---- dashboard ---- */
