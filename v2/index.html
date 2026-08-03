@@ -257,6 +257,8 @@
   function policyById(id){return POLMAP[id];}
   function benefitByKey(pol,key){for(var i=0;i<pol.benefitSchedule.length;i++)if(pol.benefitSchedule[i].key===key)return pol.benefitSchedule[i];return null;}
   function amtOf(pol,ben){var a=ben.amount;return (a&&typeof a==="object")?(pol.planTier==="low"?a.low:a.high):a;}
+  // year-versioned amounts: ben.amountByYear[YYYY] overrides the base amount for claims dated that year
+  function benAmount(pol,ben,date){if(ben.amountByYear&&ben.amountByYear[yr(date)]!=null)return ben.amountByYear[yr(date)];return amtOf(pol,ben);}
   function today(){try{return new Date().toISOString().slice(0,10);}catch(e){return "2026-08-02";}}
   function addDays(iso,n){try{var d=new Date(iso+"T00:00:00");d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}catch(e){return iso;}}
   function daysBetween(a,b){try{return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/86400000);}catch(e){return 0;}}
@@ -279,7 +281,7 @@
       if(!effectiveOn(pol,visit.date))return;
       if(!eventTypeOk(pol,event.type))return;
       var ben=benefitByKey(pol,pair[1]); if(!ben)return;
-      out.push({policyId:pol.id,insurer:pol.insurer,benefitKey:ben.key,benefitLabel:ben.label,expectedAmount:amtOf(pol,ben),cap:capState(pol,ben,event.personId,visit.date)});
+      out.push({policyId:pol.id,insurer:pol.insurer,benefitKey:ben.key,benefitLabel:ben.label,expectedAmount:benAmount(pol,ben,visit.date),cap:capState(pol,ben,event.personId,visit.date)});
     });
     return out;
   }
