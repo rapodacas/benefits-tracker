@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E7C66">
+<title>Apodaca Benefits Tracker</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+  :root{
+    --bg:#F4F6F5; --surface:#FFFFFF; --surface-2:#EEF3F1; --ink:#16211F; --ink-soft:#5B6B67;
+    --hair:#DCE5E1; --brand:#0E7C66; --brand-ink:#0A5F4E;
+    --amber:#B7791F; --amber-bg:#FBEFD3; --blue:#2563A8; --blue-bg:#DCE9F7;
+    --green:#1E8E5A; --green-bg:#D8F0E2; --red:#C0432F; --red-bg:#F7DFD9;
+    --shadow:0 4px 18px rgba(16,60,50,.08); --r:16px; --fs:20px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0C1513; --surface:#132420; --surface-2:#0F1E1B; --ink:#EAF3F0; --ink-soft:#9FB4AE;
+      --hair:#22403A; --brand:#3FBF9F; --brand-ink:#57D2B3;
+      --amber:#E3B45C; --amber-bg:#3A2F14; --blue:#7BA9DD; --blue-bg:#16283C;
+      --green:#4FCF8B; --green-bg:#123227; --red:#E68472; --red-bg:#3A1C17;
+      --shadow:0 6px 22px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="light"]{--bg:#F4F6F5;--surface:#FFFFFF;--surface-2:#EEF3F1;--ink:#16211F;--ink-soft:#5B6B67;--hair:#DCE5E1;--brand:#0E7C66;--brand-ink:#0A5F4E;--amber:#B7791F;--amber-bg:#FBEFD3;--blue:#2563A8;--blue-bg:#DCE9F7;--green:#1E8E5A;--green-bg:#D8F0E2;--red:#C0432F;--red-bg:#F7DFD9;--shadow:0 4px 18px rgba(16,60,50,.08);}
+  :root[data-theme="dark"]{--bg:#0C1513;--surface:#132420;--surface-2:#0F1E1B;--ink:#EAF3F0;--ink-soft:#9FB4AE;--hair:#22403A;--brand:#3FBF9F;--brand-ink:#57D2B3;--amber:#E3B45C;--amber-bg:#3A2F14;--blue:#7BA9DD;--blue-bg:#16283C;--green:#4FCF8B;--green-bg:#123227;--red:#E68472;--red-bg:#3A1C17;--shadow:0 6px 22px rgba(0,0,0,.4);}
+
+  *{box-sizing:border-box}
+  html{font-size:var(--fs);-webkit-text-size-adjust:100%}
+  body{margin:0;overflow-x:hidden;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  h1,h2,h3{margin:0}
+  button{font-family:inherit;cursor:pointer}
+  input,select{font-family:inherit}
+
+  header.top{background:linear-gradient(135deg,var(--brand),var(--brand-ink));color:#fff;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  header.top .t .ey{font-size:.62rem;text-transform:uppercase;letter-spacing:.18em;opacity:.85;font-weight:800}
+  header.top .t h1{font-size:1.05rem;font-weight:800;letter-spacing:.01em}
+  header.top .yr{display:flex;align-items:center;gap:8px}
+  header.top select,header.top button{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 10px;font-size:.8rem;font-weight:700}
+
+  main{max-width:680px;margin:0 auto;padding:14px 16px 110px}
+  .panel{display:none}
+  .panel.active{display:block;animation:rise .3s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.panel.active{animation:none}}
+
+  .card{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);box-shadow:var(--shadow);padding:15px 16px;margin-bottom:13px}
+  h2.sec{font-size:1.15rem;font-weight:800;margin:16px 2px 10px;display:flex;align-items:center;gap:8px}
+  .muted{color:var(--ink-soft)}
+  .small{font-size:.82rem}
+
+  /* stat tiles */
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:6px}
+  .tile{background:var(--surface);border:1px solid var(--hair);border-radius:14px;box-shadow:var(--shadow);padding:14px}
+  .tile .k{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--ink-soft)}
+  .tile .v{font-size:1.7rem;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums;line-height:1}
+  .tile .s{font-size:.72rem;color:var(--ink-soft);margin-top:3px}
+  .tile.good .v{color:var(--green)} .tile.warn .v{color:var(--amber)} .tile.info .v{color:var(--blue)}
+
+  /* wellness dots */
+  .wrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .wdot{flex:1 1 auto;min-width:120px;display:flex;align-items:center;gap:10px;border:1px solid var(--hair);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
+  .wdot .ck{width:26px;height:26px;border-radius:50%;border:2px solid var(--green);display:grid;place-items:center;color:#fff;font-weight:900;flex:none}
+  .wdot.done{background:var(--green-bg);border-color:var(--green)}
+  .wdot.done .ck{background:var(--green)}
+  .wdot .nm{font-weight:700;font-size:.9rem;line-height:1.1}
+  .wdot .amt{font-size:.72rem;color:var(--ink-soft)}
+
+  /* forms */
+  label.fld{display:block;margin-bottom:10px}
+  label.fld .lb{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:4px;display:block}
+  input.in,select.in,textarea.in{width:100%;padding:11px 12px;border:1px solid var(--hair);border-radius:11px;background:var(--surface-2);color:var(--ink);font-size:.92rem}
+  textarea.in{min-height:52px;resize:vertical}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn{border:none;background:var(--brand);color:#fff;font-weight:800;padding:12px 16px;border-radius:12px;font-size:.95rem;width:100%}
+  .btn.sec{background:var(--surface-2);color:var(--ink);border:1px solid var(--hair)}
+  .btn.sm{width:auto;padding:8px 13px;font-size:.82rem}
+
+  /* event/claim rows */
+  .ev{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-top:1px solid var(--hair)}
+  .ev:first-child{border-top:none}
+  .ev .who{flex:none;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-weight:800;color:#fff;font-size:.9rem}
+  .ev .mid{flex:1;min-width:0}
+  .ev .lab{font-weight:700;font-size:.92rem;line-height:1.2}
+  .ev .meta{font-size:.76rem;color:var(--ink-soft);margin-top:2px}
+  .ev .amt{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pill{display:inline-block;font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:3px 9px;border-radius:999px;margin-top:6px}
+  .pill.to_file{background:var(--amber-bg);color:var(--amber)}
+  .pill.filed{background:var(--blue-bg);color:var(--blue)}
+  .pill.paid{background:var(--green-bg);color:var(--green)}
+  .pill.denied{background:var(--red-bg);color:var(--red)}
+  .ev .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .ev .acts button{font-size:.72rem;font-weight:700;border:1px solid var(--hair);background:var(--surface-2);color:var(--ink);border-radius:8px;padding:5px 9px}
+  .ev .x{border:none;background:none;color:var(--ink-soft);font-size:1rem;flex:none;padding:2px 4px}
+
+  .filterbar{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;padding:2px}
+  .filterbar button, .chipbtn{flex:none;border:1px solid var(--hair);background:var(--surface);color:var(--ink-soft);font-weight:700;font-size:.78rem;padding:7px 12px;border-radius:999px;white-space:nowrap}
+  .chipbtn.on{background:var(--brand);color:#fff;border-color:transparent}
+
+  /* reference */
+  .refgrp h3{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--brand);font-weight:800;margin:14px 2px 6px}
+  .refrow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--hair);font-size:.88rem}
+  .refrow:first-child{border-top:none}
+  .refrow .amt{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--brand)}
+  .toggle{display:inline-flex;border:1px solid var(--hair);border-radius:10px;overflow:hidden}
+  .toggle button{padding:8px 14px;font-weight:800;font-size:.82rem;border:none;background:var(--surface);color:var(--ink-soft)}
+  .toggle button.on{background:var(--brand);color:#fff}
+
+  .empty{text-align:center;color:var(--ink-soft);font-style:italic;padding:26px 12px;font-size:.9rem}
+
+  /* quick-add / voice */
+  .mic{width:100%;border:none;border-radius:16px;padding:18px;font-size:1.05rem;font-weight:800;color:#fff;
+    background:linear-gradient(135deg,var(--brand),var(--brand-ink));display:flex;align-items:center;justify-content:center;gap:10px}
+  .mic.live{background:linear-gradient(135deg,var(--red),#8f2e1f);animation:pulse 1.1s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(192,67,47,.5)}50%{box-shadow:0 0 0 12px rgba(192,67,47,0)}}
+  @media (prefers-reduced-motion:reduce){.mic.live{animation:none}}
+  .mic .micIcon{font-size:1.5rem}
+  .heard{background:var(--surface-2);border:1px solid var(--hair);border-radius:10px;padding:9px 12px;font-size:.85rem;margin-top:10px}
+  .heard b{color:var(--brand)}
+  .scenarios{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .scn{border:1px solid var(--hair);background:var(--surface-2);color:var(--ink);border-radius:13px;padding:12px 10px;font-weight:700;font-size:.82rem;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+  .scn .i{font-size:1.5rem}
+  .scn.hot{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand) inset}
+  .stackline{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--hair)}
+  .stackline:first-child{border-top:none}
+  .stackline input{width:18px;height:18px;flex:none;accent-color:var(--brand)}
+  .stackline .pl{flex:1;min-width:0}
+  .stackline .pol{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft)}
+  .stackline .bn{font-size:.88rem;font-weight:600}
+  .stackline .am{font-weight:800;font-variant-numeric:tabular-nums;color:var(--brand)}
+  .stacktotal{display:flex;justify-content:space-between;align-items:center;margin:12px 0;font-weight:800}
+  .stacktotal .big{font-size:1.4rem;color:var(--green);font-variant-numeric:tabular-nums}
+  .portalrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .portalrow a{flex:1;min-width:140px;text-align:center;text-decoration:none;border:1px solid var(--hair);background:var(--surface-2);color:var(--brand);font-weight:800;font-size:.82rem;padding:11px;border-radius:11px}
+
+  nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:space-around;background:var(--surface);border-top:1px solid var(--hair);padding:8px 4px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px rgba(16,60,50,.1)}
+  nav.tabs button{flex:1;border:none;background:none;color:var(--ink-soft);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.64rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;padding:3px 2px}
+  nav.tabs button .ic{font-size:1.4rem;line-height:1}
+  nav.tabs button.active{color:var(--brand)}
+
+  /* gate */
+  #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:none;align-items:center;justify-content:center;padding:24px}
+  #gate.show{display:flex}
+  #gate .box{max-width:420px;width:100%;background:var(--surface);border:1px solid var(--hair);border-radius:20px;box-shadow:var(--shadow);padding:26px 22px;text-align:center}
+  #gate .lock{font-size:2.4rem}
+  #gate h2{font-size:1.25rem;font-weight:800;margin:8px 0 6px}
+  #gate p{color:var(--ink-soft);font-size:.88rem;line-height:1.5;margin:0 0 16px}
+  #fsBanner{background:var(--amber-bg);color:var(--amber);font-size:.78rem;font-weight:700;text-align:center;padding:7px 10px}
+  :focus-visible{outline:3px solid var(--brand);outline-offset:2px;border-radius:6px}
+  a{color:var(--brand)}
+</style>
+</head>
+<body>
+
+<div id="fsBanner">🔒 Private — Google sign-in, limited to Raoul &amp; Roxy. Verify amounts against your certificate before filing.</div>
+
+<header class="top">
+  <div class="t"><div class="ey">Securian · General Atomics</div><h1>Apodaca Benefits Tracker</h1></div>
+  <div class="yr">
+    <select id="yearSel" aria-label="Year"></select>
+    <button id="themeBtn" aria-label="Theme">◐</button>
+  </div>
+</header>
+
+<main>
+  <!-- DASHBOARD -->
+  <section class="panel active" id="p-dash">
+    <div class="tiles">
+      <div class="tile warn"><div class="k">To file</div><div class="v" id="s-tofile">$0</div><div class="s" id="s-tofile-n">0 items</div></div>
+      <div class="tile info"><div class="k">Filed · pending</div><div class="v" id="s-filed">$0</div><div class="s" id="s-filed-n">0 items</div></div>
+      <div class="tile good"><div class="k">Paid this year</div><div class="v" id="s-paid">$0</div><div class="s" id="s-paid-n">0 items</div></div>
+      <div class="tile"><div class="k">Freebies left</div><div class="v" id="s-free">$0</div><div class="s">wellness + mammogram unclaimed</div></div>
+    </div>
+    <h2 class="sec">🟢 This year's freebies</h2>
+    <div class="card">
+      <p class="small muted" style="margin:0 0 8px">$100 wellness screening per person (one/year) + Roxy's $250 mammogram — for routine care you already get. Tap to claim.</p>
+      <div class="wrow" id="wellRowDash"></div>
+    </div>
+    <h2 class="sec">Recent activity</h2>
+    <div class="card" id="recentList"></div>
+  </section>
+
+  <!-- LOG & CLAIMS -->
+  <section class="panel" id="p-log">
+    <h2 class="sec">🎤 Quick add</h2>
+    <div class="card">
+      <button class="mic" id="micBtn"><span class="micIcon" id="micIcon">🎤</span><span id="micLabel">Tap &amp; say a claim</span></button>
+      <p class="small muted" id="micHint" style="margin:9px 0 0;text-align:center">Try: "Juliet went to the ER" · "Scarlette had an X-ray" · "Roxy mammogram"</p>
+      <div class="heard" id="heard" style="display:none"></div>
+      <div style="margin-top:14px">
+        <div class="lb" style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:6px">Who</div>
+        <div class="seg" id="qaPeople"></div>
+        <div class="lb" style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin:8px 0 6px">What happened — tap to file the whole stack</div>
+        <div class="scenarios" id="qaScenarios"></div>
+      </div>
+    </div>
+    <div class="card" id="stackCard" style="display:none"></div>
+
+    <h2 class="sec">➕ Add manually</h2>
+    <div class="card">
+      <div class="row2">
+        <label class="fld"><span class="lb">Who</span><select class="in" id="f-person"></select></label>
+        <label class="fld"><span class="lb">Date</span><input class="in" id="f-date" type="date"></label>
+      </div>
+      <label class="fld"><span class="lb">What happened</span><select class="in" id="f-benefit"></select></label>
+      <div class="row2">
+        <label class="fld"><span class="lb">Claim amount ($)</span><input class="in" id="f-amount" type="number" inputmode="numeric"></label>
+        <label class="fld"><span class="lb">Provider</span><input class="in" id="f-provider" placeholder="Clinic / ER"></label>
+      </div>
+      <label class="fld"><span class="lb">Notes</span><input class="in" id="f-notes" placeholder="e.g. Jules — slid into 2nd, X-ray"></label>
+      <label style="display:flex;align-items:center;gap:9px;margin-bottom:12px;font-size:.85rem;font-weight:600"><input type="checkbox" id="f-docs" style="width:18px;height:18px">I have the paperwork (bill / EOB / doctor note)</label>
+      <button class="btn" id="addEvent">Add to claims list</button>
+    </div>
+    <h2 class="sec">Claims</h2>
+    <div class="filterbar" id="statusFilter">
+      <button class="chipbtn on" data-f="all">All</button>
+      <button class="chipbtn" data-f="to_file">To file</button>
+      <button class="chipbtn" data-f="filed">Filed</button>
+      <button class="chipbtn" data-f="paid">Paid</button>
+      <button class="chipbtn" data-f="denied">Denied</button>
+    </div>
+    <div class="card" id="claimList"></div>
+  </section>
+
+  <!-- WELLNESS -->
+  <section class="panel" id="p-well">
+    <h2 class="sec">🎗️ Wellness & screening money</h2>
+    <div class="card">
+      <p class="small muted" style="margin:0 0 4px">The easiest benefit to claim and the easiest to forget. <b>$100 per person, once per year</b>, for any routine screening (annual physical, bloodwork, dental, eye, etc.). Plus <b>$250</b> for Roxy's mammogram.</p>
+      <div class="tile good" style="margin:12px 0"><div class="k">Captured this year</div><div class="v" id="wellCaptured">$0</div><div class="s" id="wellOf">of $0 available</div></div>
+      <div class="wrow" id="wellRowFull"></div>
+    </div>
+  </section>
+
+  <!-- REFERENCE -->
+  <section class="panel" id="p-ref">
+    <h2 class="sec">📋 Benefit reference</h2>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">
+        <span class="small muted">Accident plan:</span>
+        <span class="toggle" id="planToggle"><button data-p="low">Low</button><button data-p="high" class="on">High</button></span>
+      </div>
+      <input class="in" id="refSearch" placeholder="Search benefits…" style="margin-bottom:6px">
+      <div id="refBody"></div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="panel" id="p-set">
+    <h2 class="sec">⚙️ People & settings</h2>
+    <div class="card" id="peopleEdit"></div>
+    <div class="card">
+      <label class="fld"><span class="lb">Accident plan tier</span>
+        <select class="in" id="setPlan"><option value="high">High plan</option><option value="low">Low plan</option></select></label>
+      <label class="fld"><span class="lb">Critical Illness coverage elected</span>
+        <select class="in" id="setCI"><option value="10000">$10,000</option><option value="20000">$20,000</option><option value="30000">$30,000</option></select></label>
+    </div>
+    <div class="card">
+      <div class="lb" style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:8px">Claim portals (where you file)</div>
+      <label class="fld"><span class="lb">Securian claim site</span><input class="in" id="setPortalSec" type="url" placeholder="https://…"></label>
+      <label class="fld"><span class="lb">American Fidelity claim site</span><input class="in" id="setPortalAF" type="url" placeholder="https://…"></label>
+      <p class="small muted" style="margin:0">These appear as one-tap "File →" buttons when you add a claim stack. Paste your exact login URLs.</p>
+    </div>
+    <div class="card">
+      <div class="lb" style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)">Account &amp; sync</div>
+      <p class="small muted" id="syncLine" style="margin:6px 0 10px">—</p>
+      <button class="btn sec sm" id="loadSeed">Reload starter data</button>
+      <button class="btn sec sm" id="signout" style="margin-top:8px">Sign out</button>
+    </div>
+    <p class="small muted" style="text-align:center;line-height:1.5">Not affiliated with Securian. Amounts pre-loaded from your General Atomics certificates (eff. 1-1-2026) — always confirm against the official schedule before filing.</p>
+  </section>
+</main>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="dash" class="active"><span class="ic">📊</span>Home</button>
+  <button data-tab="log"><span class="ic">➕</span>Claims</button>
+  <button data-tab="well"><span class="ic">🎗️</span>Wellness</button>
+  <button data-tab="ref"><span class="ic">📋</span>Benefits</button>
+  <button data-tab="set"><span class="ic">⚙️</span>Setup</button>
+</nav>
+
+<!-- Google auth gate -->
+<div id="gate">
+  <div class="box">
+    <div class="lock">🔒</div>
+    <div class="gv" id="gv-login">
+      <h2>Apodaca Benefits</h2>
+      <p>Private to Raoul &amp; Roxy. Sign in with the Google account on your family's access list.</p>
+      <button class="btn" id="googleBtn">Sign in with Google</button>
+      <p id="loginErr" style="color:var(--red);font-size:.82rem;margin-top:12px;display:none"></p>
+    </div>
+    <div class="gv" id="gv-denied" style="display:none">
+      <h2>Not authorized</h2>
+      <p><b id="deniedEmail"></b> isn't on the access list. Only Raoul &amp; Roxy can open this board.</p>
+      <button class="btn sec" id="tryAnother">Use a different account</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  /* ---- Firebase (reuses the existing apartment-plan project) ---- */
+  var firebaseConfig={
+    apiKey:"AIzaSyB2l9ho3Hmb4TJIorQZSY27MoKVJbxxsEA",
+    authDomain:"apartment-plan.firebaseapp.com",
+    databaseURL:"https://apartment-plan-default-rtdb.firebaseio.com",
+    projectId:"apartment-plan",
+    storageBucket:"apartment-plan.firebasestorage.app",
+    messagingSenderId:"500021660433",
+    appId:"1:500021660433:web:fb65a2b823d995a9079ab0"
+  };
+  var DB_PATH="benefits/data"; // access-controlled to Raoul & Roxy via database rules
+
+  /* ---- Benefit reference data (from the actual certificates) ---- */
+  var ACCIDENT=[
+    {g:"Emergency care",items:[
+      ["Ground/water ambulance",250,500],["Air ambulance",1000,2000],
+      ["ER treatment",150,225],["Initial doctor / urgent-care visit (injury)",100,150],
+      ["Blood, plasma or platelets",200,400],["Emergency dental — crown",100,200],["Emergency dental — extraction",50,100]
+    ]},
+    {g:"Diagnostics & hospital",items:[
+      ["X-ray",50,100],["Diagnostic test (MRI/CT/EEG/ultrasound)",150,225],
+      ["Hospital admission — non-ICU",1000,2000],["Hospital admission — ICU",2000,4000],
+      ["Hospital daily — non-ICU",100,200],["Hospital daily — ICU",300,600],["Medical observation unit",50,100]
+    ]},
+    {g:"Injuries",items:[
+      ["Concussion",250,500],["Child organized-sports injury (stacks)",250,500],
+      ["Laceration — with stitches",100,200],["Laceration — without stitches",25,50],
+      ["Broken bone (see certificate by bone)",800,960],["Dislocation (see certificate by joint)",640,720],
+      ["Eye injury — with surgery",150,300],["Traumatic brain injury",1000,2000],["Burns (varies by % body)",50,100]
+    ]},
+    {g:"Surgery",items:[
+      ["Outpatient surgery — Tier 1",250,500],["Outpatient surgery — Tier 2",500,1000],
+      ["Inpatient surgery",500,1000],["Knee cartilage — arthroscopic",375,750],
+      ["Tendon/ligament/rotator cuff — arthroscopic",375,750],["Joint replacement",750,1500]
+    ]},
+    {g:"Follow-up care",items:[
+      ["Follow-up doctor visit",100,150],["Outpatient therapy (PT/OT/chiro/acupuncture) — lump sum",300,500],
+      ["Appliances (crutches, brace, walker)",125,250],["Prosthetic — one",1000,2000],
+      ["Post-traumatic stress disorder",250,500],["Rehab therapy inpatient — per day",150,300]
+    ]}
+  ];
+  var CI_SPECIAL=[
+    ["Wellness screening (per person / year)",100],
+    ["Mammogram testing",250],
+    ["Skin cancer (non-melanoma / in-situ)",250],
+    ["Autism spectrum disorder (child)",3000]
+  ];
+  var CI_PCT=[
+    ["Heart attack",1],["Invasive cancer",1],["Stroke",1],["Major organ failure",1],
+    ["End-stage renal (kidney) failure",1],["Sudden cardiac arrest",1],["Paralysis",1],
+    ["Type 1 diabetes (child)",1],["Down syndrome (child)",1],["Cerebral palsy (child)",1],
+    ["Coronary artery disease needing surgery",.5],["Non-invasive cancer",.5],
+    ["COVID-19 requiring hospitalization",.25],["Metastatic cancer",.25],["Aneurysm",.1],["Infertility",.1]
+  ];
+  /* ---- American Fidelity policies (Roxy's, through her district) ---- */
+  var AF_ACCIDENT=[ // all 5 covered
+    ["ER / emergency treatment",150],["Urgent-care treatment",100],["Follow-up treatment (max 4)",50],
+    ["Medical imaging (X-ray/MRI/CT)",150],["Physical therapy (per visit, max 8)",25],["Concussion",200],
+    ["Laceration — no sutures",25],["Laceration — sutured ≤2in",100],["Laceration — 2–6in",200],["Laceration — >6in",400],
+    ["Appliances (crutches/brace)",100],["Eye injury — surgical repair",250],["Emergency dental — crown",150],["Emergency dental — extraction",50],
+    ["Ambulance — ground",150],["Ambulance — air",500],["Ruptured disc / torn knee cartilage",500],
+    ["Tendon/ligament/rotator cuff — one",500],["Internal injuries",1000],["Fracture — open reduction (surgical)",3000],
+    ["Hospital admission",1000],["Hospital confinement (per day)",200],["ICU (per day)",600],["Blood/plasma/platelets",250],["Prosthesis",500],
+    ["Wellness benefit (per year)",75]
+  ];
+  var AF_HOSPITAL=[ // all 5 covered — pays for injury OR sickness
+    ["Hospital admission (per day)",500],["Hospital confinement (per day, max 30)",100],["ICU (per day, max 10)",200],
+    ["Rehabilitation (per day, max 10)",50],["ER treatment (per day, max 3)",200],
+    ["Outpatient accident visit — office/urgent care (max 6/yr)",50],
+    ["Surgery — hospital/ASC (per day)",1000],["Surgery — office/urgent care (per day)",125]
+  ];
+  var AF_CANCER=[ // Roxy only
+    ["Cancer screening test (per year)",60],["Mammography (per year)",150],["Cancer screening follow-up",60],
+    ["Radiation/chemo/immunotherapy (per day)",300],["Admin/lab work (per month)",75],["Blood/plasma/platelets (per day)",150],
+    ["Medical imaging (per image, max 2/yr)",200],["Hospital confinement (per day, first 30)",200],
+    ["Ambulance — ground",200],["Ambulance — air",2000],["Physical/speech therapy (per visit)",25],["Second/third surgical opinion",300]
+  ];
+
+  /* ---- Stack scenarios: one tap files an event on EVERY policy that pays ---- */
+  /* amt = number, or {low,high} for Securian Accident tier */
+  var SCENARIOS=[
+    {k:"er",name:"ER visit",ic:"🚑",fil:[["Securian Acc","ER treatment",{low:150,high:225}],["AF Acc","ER / emergency treatment",150],["AF Hosp","ER treatment (per day)",200]]},
+    {k:"urgent",name:"Urgent care",ic:"🏥",fil:[["Securian Acc","Initial / urgent-care visit",{low:100,high:150}],["AF Acc","Urgent-care treatment",100],["AF Hosp","Outpatient accident visit",50]]},
+    {k:"xray",name:"X-ray / imaging",ic:"🩻",fil:[["Securian Acc","X-ray",{low:50,high:100}],["AF Acc","Medical imaging",150]]},
+    {k:"followup",name:"Doctor follow-up",ic:"🩺",fil:[["Securian Acc","Follow-up visit",{low:100,high:150}],["AF Acc","Follow-up treatment",50],["AF Hosp","Outpatient accident visit",50]]},
+    {k:"concussion",name:"Concussion",ic:"🤕",fil:[["Securian Acc","Concussion",{low:250,high:500}],["AF Acc","Concussion",200]]},
+    {k:"sports",name:"Sports-injury bonus",ic:"⚾",fil:[["Securian Acc","Child organized-sports injury",{low:250,high:500}]]},
+    {k:"pt",name:"Physical therapy",ic:"🦵",fil:[["Securian Acc","Outpatient therapy (lump sum)",{low:300,high:500}],["AF Acc","Physical therapy (per visit)",25]]},
+    {k:"stitches",name:"Stitches / cut",ic:"🩹",fil:[["Securian Acc","Laceration w/ stitches",{low:100,high:200}],["AF Acc","Laceration — sutured",100]]},
+    {k:"ambulance",name:"Ambulance",ic:"🚨",fil:[["Securian Acc","Ambulance (ground)",{low:250,high:500}],["AF Acc","Ambulance — ground",150]]},
+    {k:"wellness",name:"Wellness / physical",ic:"🎗️",well:["secwell"],fil:[["Securian CI","Wellness screening",100]]},
+    {k:"mammogram",name:"Mammogram",ic:"🎀",roxy:true,well:["secmammo","afmammo"],fil:[["Securian CI","Mammogram",250],["AF Cancer","Mammography",150]]},
+    {k:"cancerscreen",name:"Cancer screen",ic:"🔬",roxy:true,well:["afscreen"],fil:[["AF Cancer","Cancer screening test",60]]}
+  ];
+  var VOICE_MAP=[
+    ["er",["emergency room","the er"," er ","e.r."]],["urgent",["urgent care","urgent"]],
+    ["xray",["x-ray","xray","x ray","imaging","mri","cat scan","ct scan"]],
+    ["followup",["follow up","follow-up","followup","recheck","re-check"]],
+    ["concussion",["concussion","head injury"]],["sports",["sports injury","sports-injury"]],
+    ["pt",["physical therapy"," pt ","rehab"]],["stitches",["stitches","laceration","sutures","got cut"]],
+    ["ambulance",["ambulance"]],["wellness",["wellness","physical","checkup","check up","annual","bloodwork","blood work","screening"]],
+    ["mammogram",["mammogram","mammography"]],["cancerscreen",["cancer screen","pap","colonoscopy","psa"]]
+  ];
+  var ALIASES={juliet:["jules","julie"],victoria:["vicky","tori","vic"],scarlette:["scarlet","scar"],roxy:["roxanne","mom","mama"],raoul:["dad","papa"]};
+  var DEFAULT_PORTALS={sec:"https://web1.lifebenefits.com/lblogin/ssl/auth/login.do", af:"https://secured.americanfidelity.com/"};
+
+  /* ---- state ---- */
+  var defaults={
+    year:2026, planTier:"high", ciCoverage:30000,
+    people:[
+      {id:"u1",name:"Raoul",role:"Employee",color:"#0E7C66"},
+      {id:"u2",name:"Roxy",role:"Spouse",color:"#B7791F"},
+      {id:"u3",name:"Scarlette",role:"Child",color:"#2563A8"},
+      {id:"u4",name:"Victoria",role:"Child",color:"#8E44AD"},
+      {id:"u5",name:"Juliet",role:"Child",color:"#C0432F"}
+    ],
+    events:[], wellness:{}, portals:{sec:"",af:""}  // wellness[year][personId]=true ; wellness[year]["u2_mammo"]=true
+  };
+  var state=JSON.parse(JSON.stringify(defaults));
+  var ui={tab:"dash", statusFilter:"all", refPlan:"high"};
+  function seedState(){
+    return JSON.parse(JSON.stringify(defaults)); // 5 family members, no pre-loaded claims
+  }
+  /* Firebase drops empty arrays/objects and returns sparse arrays as objects — rebuild a safe shape. */
+  function toArr(x){ if(Array.isArray(x)) return x.filter(function(v){return v!=null;}); if(x&&typeof x==="object") return Object.keys(x).map(function(k){return x[k];}); return []; }
+  function normalize(s){
+    s=s||{};
+    s.year=s.year||2026; s.planTier=s.planTier||"high"; s.ciCoverage=s.ciCoverage||30000;
+    s.people=toArr(s.people); if(!s.people.length) s.people=JSON.parse(JSON.stringify(defaults.people));
+    s.events=toArr(s.events);
+    if(!s.wellness||typeof s.wellness!=="object") s.wellness={};
+    if(!s.portals||typeof s.portals!=="object") s.portals={sec:"",af:""};
+    return s;
+  }
+  var lastSyncedStr="", pushTimer=null;
+  var auth=null, db=null, dref=null, currentUser=null;
+
+  function el(id){return document.getElementById(id);}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+  function money(n){return "$"+(Math.round(n||0)).toLocaleString();}
+  function person(id){return state.people.filter(function(p){return p.id===id;})[0];}
+  function initials(n){return (n||"?").trim().slice(0,1).toUpperCase();}
+
+  /* ---- Firebase realtime sync ---- */
+  function typing(){var a=document.activeElement;return !!(a&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA"||a.tagName==="SELECT"));}
+  function save(){ if(!dref)return; render(); schedulePush(); }
+  function schedulePush(){
+    var str=JSON.stringify(state); lastSyncedStr=str; setSync("Saving…");
+    if(pushTimer)clearTimeout(pushTimer);
+    pushTimer=setTimeout(function(){
+      dref.set(state).then(function(){setSync("Synced ✓");}).catch(function(){setSync("Save error");});
+    },300);
+  }
+  function onRemote(remote){
+    if(remote==null || !remote.people){ state=seedState(); lastSyncedStr=JSON.stringify(state); dref.set(state); render(); setSync("Loaded starter data ✓"); return; }
+    remote=normalize(remote);
+    var str=JSON.stringify(remote);
+    if(str!==lastSyncedStr && !typing()){ state=remote; lastSyncedStr=str; render(); setSync("Updated ✓"); }
+    else setSync("Live ✓");
+  }
+  function setSync(t){var s=el("syncLine"); if(s) s.textContent=(currentUser?("Signed in as "+currentUser+" · "):"")+t;}
+
+  /* ---- gate / auth (Firebase Google sign-in) ---- */
+  function showGate(view){el("gate").classList.add("show");["login","denied"].forEach(function(v){var n=el("gv-"+v); if(n) n.style.display=(v===view)?"block":"none";});}
+  function hideGate(){el("gate").classList.remove("show");}
+
+  function boot(){
+    if(!window.firebase){ showGate("login"); el("loginErr").textContent="Couldn't load Firebase — check your connection and refresh."; el("loginErr").style.display="block"; return; }
+    firebase.initializeApp(firebaseConfig);
+    auth=firebase.auth(); db=firebase.database();
+    showGate("login");
+    auth.onAuthStateChanged(function(user){
+      if(pushTimer){clearTimeout(pushTimer);pushTimer=null;}
+      if(dref){dref.off();dref=null;}
+      if(!user){ currentUser=null; showGate("login"); return; }
+      currentUser=user.displayName||user.email;
+      startDb();
+    });
+  }
+  function startDb(){
+    dref=db.ref(DB_PATH);
+    dref.on("value",
+      function(snap){ hideGate(); onRemote(snap.val()); },
+      function(err){ // permission denied = not on the access list
+        if(dref){dref.off();dref=null;}
+        el("deniedEmail").textContent=(auth.currentUser&&auth.currentUser.email)||currentUser||"";
+        showGate("denied");
+      });
+  }
+  function googleSignIn(){
+    var p=new firebase.auth.GoogleAuthProvider();
+    el("loginErr").style.display="none";
+    auth.signInWithPopup(p).catch(function(e){
+      if(e&&(e.code==="auth/popup-blocked"||e.code==="auth/cancelled-popup-request"||e.code==="auth/operation-not-supported-in-this-environment")){
+        try{auth.signInWithRedirect(p);}catch(_){}
+      } else if(e && e.code!=="auth/popup-closed-by-user"){ el("loginErr").textContent=e.message||"Sign-in failed."; el("loginErr").style.display="block"; }
+    });
+  }
+  el("googleBtn").addEventListener("click",googleSignIn);
+  el("tryAnother").addEventListener("click",function(){ auth.signOut().then(function(){showGate("login");}); });
+  el("signout").addEventListener("click",function(){ auth.signOut(); });
+  el("loadSeed").addEventListener("click",function(){
+    if(!dref) return;
+    if(!confirm("Load starter data (5 family members + Juliet's claim history)? This replaces the current benefits data.")) return;
+    state=seedState(); lastSyncedStr=JSON.stringify(state); dref.set(state); render(); setSync("Starter data loaded ✓");
+  });
+
+  /* ---- theme + tabs + year ---- */
+  el("themeBtn").addEventListener("click",function(){
+    var cur=document.documentElement.getAttribute("data-theme");
+    var dark=cur?cur==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+    document.documentElement.setAttribute("data-theme",dark?"light":"dark");
+  });
+  el("tabs").addEventListener("click",function(e){
+    var b=e.target.closest("button[data-tab]"); if(!b)return;
+    ui.tab=b.getAttribute("data-tab");
+    Array.prototype.forEach.call(this.querySelectorAll("button"),function(x){x.classList.toggle("active",x===b);});
+    ["dash","log","well","ref","set"].forEach(function(t){el("p-"+t).classList.toggle("active",t===ui.tab);});
+    window.scrollTo({top:0});
+  });
+
+  /* ---- event form ---- */
+  function benefitOptions(){
+    var g=el("f-benefit"); g.innerHTML="";
+    function opt(label,val){var o=document.createElement("option");o.value=val;o.textContent=label;g.appendChild(o);}
+    function grp(name){var og=document.createElement("optgroup");og.label=name;g.appendChild(og);return og;}
+    var plan=state.planTier;
+    var ci=grp("Critical Illness & wellness");
+    CI_SPECIAL.forEach(function(x){var o=document.createElement("option");o.value="ci_fixed|"+x[1]+"|"+x[0];o.textContent=x[0]+" — "+money(x[1]);ci.appendChild(o);});
+    CI_PCT.forEach(function(x){var amt=Math.round(x[1]*state.ciCoverage);var o=document.createElement("option");o.value="ci_fixed|"+amt+"|"+x[0];o.textContent=x[0]+" — "+money(amt)+" ("+(x[1]*100)+"%)";ci.appendChild(o);});
+    ACCIDENT.forEach(function(sec){
+      var og=grp("Securian Accident · "+sec.g);
+      sec.items.forEach(function(it){var amt=plan==="high"?it[2]:it[1];var o=document.createElement("option");o.value="acc|"+amt+"|Securian Acc: "+it[0];o.textContent=it[0]+" — "+money(amt);og.appendChild(o);});
+    });
+    function afgrp(name,arr,pfx){var og=grp(name);arr.forEach(function(it){var o=document.createElement("option");o.value="af|"+it[1]+"|"+pfx+": "+it[0];o.textContent=it[0]+" — "+money(it[1]);og.appendChild(o);});}
+    afgrp("American Fidelity · Accident (all 5)",AF_ACCIDENT,"AF Acc");
+    afgrp("American Fidelity · Hospital Indemnity (all 5)",AF_HOSPITAL,"AF Hosp");
+    afgrp("American Fidelity · Cancer (Roxy only)",AF_CANCER,"AF Cancer");
+    var oth=grp("Other");var o=document.createElement("option");o.value="acc|0|Other (enter amount)";o.textContent="Other — enter amount";oth.appendChild(o);
+  }
+  el("f-benefit").addEventListener("change",function(){
+    var parts=this.value.split("|"); if(parts[1]!=null) el("f-amount").value=parts[1];
+  });
+  el("addEvent").addEventListener("click",function(){
+    var pid=el("f-person").value, val=el("f-benefit").value;
+    if(!pid||!val){alert("Pick who and what happened.");return;}
+    var parts=val.split("|");
+    var ev={id:"e"+Date.now()+Math.round(performance.now()),
+      personId:pid, date:el("f-date").value||"",
+      label:parts.slice(2).join("|"), amount:parseFloat(el("f-amount").value)||0,
+      provider:el("f-provider").value.trim(), notes:el("f-notes").value.trim(),
+      docs:el("f-docs").checked, status:"to_file", paidAmount:0};
+    state.events.push(ev);
+    el("f-provider").value="";el("f-notes").value="";el("f-docs").checked=false;
+    save();
+    ui.tab="log";
+  });
+
+  /* ---- status cycle ---- */
+  var NEXT={to_file:"filed",filed:"paid",paid:"to_file",denied:"to_file"};
+  function cycle(ev){ ev.status=NEXT[ev.status]||"to_file"; if(ev.status==="paid"&&!ev.paidAmount)ev.paidAmount=ev.amount; save(); }
+
+  /* ---- wellness ---- */
+  function wKey(){return "y"+state.year;}
+  function wGet(k){return !!(state.wellness[wKey()]&&state.wellness[wKey()][k]);}
+  function wSet(k,v){ if(!state.wellness[wKey()])state.wellness[wKey()]={}; state.wellness[wKey()][k]=v; save(); }
+  function roxyPerson(){return state.people.filter(function(p){return /rox/i.test(p.name)||p.role==="Spouse";})[0];}
+  function freebies(){
+    var list=[];
+    state.people.forEach(function(p){ list.push({key:"secwell_"+p.id, who:p.name, label:"Securian wellness screening", amt:100}); });
+    var rx=roxyPerson();
+    if(rx){
+      list.push({key:"secmammo", who:rx.name, label:"Securian mammogram", amt:250});
+      list.push({key:"afscreen", who:rx.name, label:"AF cancer screening test", amt:60});
+      list.push({key:"afmammo", who:rx.name, label:"AF mammography", amt:150});
+    }
+    list.push({key:"afaccwell", who:"Family", label:"AF accident wellness (confirm if per-person)", amt:75});
+    return list;
+  }
+  function wellnessAvailable(){ return freebies().reduce(function(a,f){return a+f.amt;},0); }
+  function wellnessCaptured(){ return freebies().reduce(function(a,f){return a+(wGet(f.key)?f.amt:0);},0); }
+
+  /* ---- renders ---- */
+  function renderWellRow(container){
+    container.innerHTML="";
+    freebies().forEach(function(f){
+      var done=wGet(f.key);
+      var d=document.createElement("button"); d.className="wdot"+(done?" done":""); d.style.textAlign="left";
+      d.innerHTML='<span class="ck">'+(done?"✓":"")+'</span><span><span class="nm">'+esc(f.who)+'</span><br><span class="amt">'+esc(f.label)+' · '+money(f.amt)+(done?" · claimed":"")+'</span></span>';
+      d.addEventListener("click",function(){wSet(f.key,!done);});
+      container.appendChild(d);
+    });
+  }
+
+  function renderDash(){
+    var evs=state.events;
+    function sum(st){return evs.filter(function(e){return e.status===st;}).reduce(function(a,e){return a+(st==="paid"?(e.paidAmount||e.amount):e.amount);},0);}
+    function cnt(st){return evs.filter(function(e){return e.status===st;}).length;}
+    el("s-tofile").textContent=money(sum("to_file")); el("s-tofile-n").textContent=cnt("to_file")+" items";
+    el("s-filed").textContent=money(sum("filed")); el("s-filed-n").textContent=cnt("filed")+" items";
+    el("s-paid").textContent=money(sum("paid")); el("s-paid-n").textContent=cnt("paid")+" items";
+    el("s-free").textContent=money(wellnessAvailable()-wellnessCaptured());
+    renderWellRow(el("wellRowDash"),false);
+    var rl=el("recentList"); var recent=evs.slice().sort(function(a,b){return (b.date||"").localeCompare(a.date||"");}).slice(0,6);
+    if(!recent.length){rl.innerHTML='<div class="empty">No claims yet. Add your first visit in the Claims tab. 🩹</div>';return;}
+    rl.innerHTML=""; recent.forEach(function(e){rl.appendChild(evRow(e,true));});
+  }
+
+  function evRow(e,compact){
+    var p=person(e.personId)||{name:"?",color:"#888"};
+    var row=document.createElement("div"); row.className="ev";
+    var acts=compact?"":'<div class="acts">'+
+      '<button data-act="cycle">→ '+({to_file:"Mark filed",filed:"Mark paid",paid:"Reopen",denied:"Reopen"}[e.status])+'</button>'+
+      '<button data-act="deny">Denied</button></div>';
+    row.innerHTML='<span class="who" style="background:'+p.color+'">'+initials(p.name)+'</span>'+
+      '<div class="mid"><div class="lab">'+esc(e.label)+'</div>'+
+      '<div class="meta">'+esc(p.name)+(e.date?" · "+e.date:"")+(e.provider?" · "+esc(e.provider):"")+(e.docs?" · 📎":"")+'</div>'+
+      (e.notes?'<div class="meta">'+esc(e.notes)+'</div>':"")+
+      '<span class="pill '+e.status+'">'+e.status.replace("_"," ")+(e.status==="paid"&&e.paidAmount?" · "+money(e.paidAmount):"")+'</span>'+acts+'</div>'+
+      '<div style="text-align:right"><div class="amt">'+money(e.amount)+'</div>'+(compact?"":'<button class="x" data-act="del" title="Delete">✕</button>')+'</div>';
+    if(!compact){
+      row.querySelector('[data-act="cycle"]').addEventListener("click",function(){cycle(e);});
+      row.querySelector('[data-act="deny"]').addEventListener("click",function(){e.status="denied";save();});
+      row.querySelector('[data-act="del"]').addEventListener("click",function(){if(confirm("Delete this claim?")){state.events=state.events.filter(function(x){return x!==e;});save();}});
+    }
+    return row;
+  }
+
+  function renderClaims(){
+    var list=el("claimList");
+    var evs=state.events.slice().sort(function(a,b){return (b.date||"").localeCompare(a.date||"");});
+    if(ui.statusFilter!=="all") evs=evs.filter(function(e){return e.status===ui.statusFilter;});
+    if(!evs.length){list.innerHTML='<div class="empty">Nothing here yet.</div>';return;}
+    list.innerHTML=""; evs.forEach(function(e){list.appendChild(evRow(e,false));});
+  }
+
+  function renderWellFull(){
+    el("wellCaptured").textContent=money(wellnessCaptured());
+    el("wellOf").textContent="of "+money(wellnessAvailable())+" available";
+    renderWellRow(el("wellRowFull"),true);
+  }
+
+  function renderRef(){
+    var body=el("refBody"), q=(el("refSearch").value||"").toLowerCase(), plan=ui.refPlan;
+    var html="";
+    function match(s){return !q||s.toLowerCase().indexOf(q)>=0;}
+    var ciRows=CI_SPECIAL.map(function(x){return [x[0],x[1]];}).concat(CI_PCT.map(function(x){return [x[0]+" ("+(x[1]*100)+"%)",Math.round(x[1]*state.ciCoverage)];}));
+    var ciFiltered=ciRows.filter(function(r){return match(r[0]);});
+    if(ciFiltered.length){html+='<div class="refgrp"><h3>Critical Illness &amp; Wellness</h3>'+ciFiltered.map(function(r){return '<div class="refrow"><span>'+esc(r[0])+'</span><span class="amt">'+money(r[1])+'</span></div>';}).join("")+'</div>';}
+    ACCIDENT.forEach(function(sec){
+      var rows=sec.items.filter(function(it){return match(it[0]);});
+      if(!rows.length)return;
+      html+='<div class="refgrp"><h3>Securian Accident · '+esc(sec.g)+'</h3>'+rows.map(function(it){return '<div class="refrow"><span>'+esc(it[0])+'</span><span class="amt">'+money(plan==="high"?it[2]:it[1])+'</span></div>';}).join("")+'</div>';
+    });
+    function afref(name,arr){var rows=arr.filter(function(it){return match(it[0]);});if(!rows.length)return;html+='<div class="refgrp"><h3>'+name+'</h3>'+rows.map(function(it){return '<div class="refrow"><span>'+esc(it[0])+'</span><span class="amt">'+money(it[1])+'</span></div>';}).join("")+'</div>';}
+    afref("American Fidelity · Accident (all 5)",AF_ACCIDENT);
+    afref("American Fidelity · Hospital Indemnity (all 5)",AF_HOSPITAL);
+    afref("American Fidelity · Cancer (Roxy only)",AF_CANCER);
+    body.innerHTML=html||'<div class="empty">No matches.</div>';
+  }
+  el("refSearch").addEventListener("input",renderRef);
+  el("planToggle").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;ui.refPlan=b.getAttribute("data-p");Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);});renderRef();});
+
+  function renderPeople(){
+    var w=el("peopleEdit"); w.innerHTML="";
+    state.people.forEach(function(p,i){
+      var row=document.createElement("div"); row.style.cssText="display:flex;gap:10px;align-items:center;padding:9px 0;border-top:"+(i?"1px solid var(--hair)":"none");
+      row.innerHTML='<span class="who" style="background:'+p.color+';width:32px;height:32px">'+initials(p.name)+'</span>'+
+        '<input class="in" style="flex:1" value="'+esc(p.name)+'" data-i="'+i+'">'+
+        '<select class="in" style="width:130px" data-r="'+i+'">'+["Employee","Spouse","Child"].map(function(r){return '<option'+(p.role===r?" selected":"")+'>'+r+'</option>';}).join("")+'</select>';
+      row.querySelector("input").addEventListener("change",function(){state.people[this.getAttribute("data-i")].name=this.value.trim()||"?";save();});
+      row.querySelector("select").addEventListener("change",function(){state.people[this.getAttribute("data-r")].role=this.value;save();});
+      w.appendChild(row);
+    });
+  }
+
+  function renderYear(){
+    var s=el("yearSel"); if(s.children.length===0){[2025,2026,2027].forEach(function(y){var o=document.createElement("option");o.value=y;o.textContent=y;s.appendChild(o);});}
+    s.value=state.year;
+  }
+  el("yearSel").addEventListener("change",function(){state.year=parseInt(this.value,10);save();});
+  el("setPlan").addEventListener("change",function(){state.planTier=this.value;save();});
+  el("setCI").addEventListener("change",function(){state.ciCoverage=parseInt(this.value,10);save();});
+
+  function renderPersonSelect(){
+    var s=el("f-person"); var cur=s.value; s.innerHTML='<option value="">Select…</option>';
+    state.people.forEach(function(p){var o=document.createElement("option");o.value=p.id;o.textContent=p.name+" ("+p.role+")";s.appendChild(o);});
+    if(cur)s.value=cur;
+  }
+
+  el("statusFilter").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;ui.statusFilter=b.getAttribute("data-f");Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);});renderClaims();});
+
+  /* ---- Quick add: voice + scenario stacks ---- */
+  var qaPerson=null;
+  function scnFor(k){for(var i=0;i<SCENARIOS.length;i++)if(SCENARIOS[i].k===k)return SCENARIOS[i];return null;}
+  function amtOf(a){return (a&&typeof a==="object")?(state.planTier==="high"?a.high:a.low):a;}
+  function isRoxySel(){return roxyPerson()&&qaPerson===roxyPerson().id;}
+  function renderQuickAdd(){
+    if(!qaPerson||!person(qaPerson)) qaPerson=state.people[0].id;
+    var seg=el("qaPeople"); seg.innerHTML="";
+    state.people.forEach(function(p){
+      var b=document.createElement("button"); b.textContent=p.name; b.className=(qaPerson===p.id?"on":"");
+      if(qaPerson===p.id) b.style.background=p.color;
+      b.addEventListener("click",function(){qaPerson=p.id; renderQuickAdd();});
+      seg.appendChild(b);
+    });
+    var sc=el("qaScenarios"); sc.innerHTML="";
+    SCENARIOS.forEach(function(s){
+      if(s.roxy && !isRoxySel()) return;
+      var b=document.createElement("button"); b.className="scn"; b.innerHTML='<span class="i">'+s.ic+'</span>'+esc(s.name);
+      b.addEventListener("click",function(){openStack(s.k);});
+      sc.appendChild(b);
+    });
+  }
+  function openStack(k){
+    var s=scnFor(k); if(!s) return; var p=person(qaPerson); if(!p) return;
+    var rows=s.fil.map(function(f){return {pol:f[0], bn:f[1], amt:amtOf(f[2]), on:true};});
+    var card=el("stackCard"); card.style.display="block";
+    function draw(){
+      var total=rows.reduce(function(a,r){return a+(r.on?r.amt:0);},0);
+      var pu=state.portals||{};
+      var secU=pu.sec||DEFAULT_PORTALS.sec, afU=pu.af||DEFAULT_PORTALS.af;
+      var needSec=rows.some(function(r){return r.on&&/securian/i.test(r.pol);});
+      var needAF=rows.some(function(r){return r.on&&/^af/i.test(r.pol);});
+      var portals=((needSec&&secU)||(needAF&&afU))?('<div class="portalrow">'+((needSec&&secU)?'<a href="'+esc(secU)+'" target="_blank" rel="noopener">File on Securian →</a>':"")+((needAF&&afU)?'<a href="'+esc(afU)+'" target="_blank" rel="noopener">File on American Fidelity →</a>':"")+'</div>'):"";
+      card.innerHTML='<h3 style="font-size:1rem;font-weight:800;margin:0 0 4px">'+s.ic+' '+esc(s.name)+' — '+esc(p.name)+'</h3>'+
+        '<p class="small muted" style="margin:0 0 8px">Files on every checked policy. Uncheck any that don’t apply.</p>'+
+        rows.map(function(r,i){return '<label class="stackline"><input type="checkbox" data-i="'+i+'"'+(r.on?" checked":"")+'><span class="pl"><span class="pol">'+esc(r.pol)+'</span><br><span class="bn">'+esc(r.bn)+'</span></span><span class="am">'+money(r.amt)+'</span></label>';}).join("")+
+        '<div class="stacktotal"><span>Total to file</span><span class="big">'+money(total)+'</span></div>'+
+        '<button class="btn" id="stackAdd">Add '+rows.filter(function(r){return r.on;}).length+' claim(s)</button>'+
+        '<button class="btn sec sm" id="stackCancel" style="margin-top:8px">Cancel</button>'+portals;
+      card.querySelectorAll('input[type=checkbox]').forEach(function(cb){cb.addEventListener("change",function(){rows[this.getAttribute("data-i")].on=this.checked; draw();});});
+      el("stackAdd").addEventListener("click",function(){addStack(s,p,rows);});
+      el("stackCancel").addEventListener("click",function(){card.style.display="none"; card.innerHTML="";});
+    }
+    draw(); card.scrollIntoView({behavior:"smooth",block:"center"});
+  }
+  function addStack(s,p,rows){
+    var today=""; try{today=new Date().toISOString().slice(0,10);}catch(e){}
+    var n=0;
+    rows.forEach(function(r){ if(!r.on) return;
+      state.events.push({id:"e"+Date.now()+"_"+(n++), personId:p.id, date:today, label:r.pol+": "+r.bn, amount:r.amt, provider:"", notes:"Quick add", docs:false, status:"to_file", paidAmount:0});
+    });
+    if(s.well){ s.well.forEach(function(wk){ wSet(wk==="secwell"?("secwell_"+p.id):wk,true); }); } else { save(); }
+    el("stackCard").style.display="none"; el("stackCard").innerHTML="";
+    ui.statusFilter="to_file";
+    var fb=el("statusFilter"); if(fb){Array.prototype.forEach.call(fb.children,function(x){x.classList.toggle("on",x.getAttribute("data-f")==="to_file");});}
+    setSync("Added "+n+" claim(s) ✓");
+  }
+
+  /* ---- Voice ---- */
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition, recog=null, listening=false, voiceReady=false;
+  function initVoice(){
+    if(voiceReady) return; voiceReady=true;
+    if(!SR){ el("micBtn").style.display="none"; el("micHint").textContent="Voice isn't supported here — tap a button below or add manually."; return; }
+    el("micBtn").addEventListener("click",function(){
+      if(listening){ try{recog.stop();}catch(e){} return; }
+      recog=new SR(); recog.lang="en-US"; recog.interimResults=false; recog.maxAlternatives=1;
+      recog.onstart=function(){listening=true; el("micBtn").classList.add("live"); el("micLabel").textContent="Listening… tap to stop"; el("micIcon").textContent="🔴";};
+      recog.onend=function(){listening=false; el("micBtn").classList.remove("live"); el("micLabel").textContent="Tap & say a claim"; el("micIcon").textContent="🎤";};
+      recog.onresult=function(e){ handleVoice((e.results[0][0].transcript||"").toLowerCase()); };
+      try{recog.start();}catch(e){}
+    });
+  }
+  function handleVoice(t){
+    var mp=null;
+    state.people.forEach(function(p){
+      var names=[p.name.toLowerCase()].concat(ALIASES[p.name.toLowerCase()]||[]);
+      names.forEach(function(nm){ if(nm && t.indexOf(nm)>=0) mp=p; });
+    });
+    var scn=null;
+    for(var i=0;i<VOICE_MAP.length && !scn;i++){ var kws=VOICE_MAP[i][1]; for(var j=0;j<kws.length;j++){ if(t.indexOf(kws[j])>=0){scn=VOICE_MAP[i][0];break;} } }
+    if(mp) qaPerson=mp.id;
+    renderQuickAdd();
+    var h=el("heard"); h.style.display="block";
+    var tags=[]; if(mp)tags.push("<b>"+esc(mp.name)+"</b>"); if(scn)tags.push("<b>"+esc(scnFor(scn).name)+"</b>");
+    h.innerHTML='Heard: “'+esc(t)+'”'+(tags.length?' → '+tags.join(" · "):"");
+    if(scn){
+      var s=scnFor(scn);
+      if(s.roxy && !isRoxySel()){ h.innerHTML+=' <span style="color:var(--red)">(Roxy-only — pick Roxy)</span>'; return; }
+      openStack(scn);
+    } else { h.innerHTML+=' — now tap what happened below.'; }
+  }
+
+  el("setPortalSec").addEventListener("change",function(){ if(!state.portals)state.portals={sec:"",af:""}; state.portals.sec=this.value.trim(); save(); });
+  el("setPortalAF").addEventListener("change",function(){ if(!state.portals)state.portals={sec:"",af:""}; state.portals.af=this.value.trim(); save(); });
+
+  function render(){
+    state=normalize(state);
+    renderYear();
+    el("setPlan").value=state.planTier; el("setCI").value=state.ciCoverage;
+    el("setPortalSec").value=state.portals.sec||DEFAULT_PORTALS.sec; el("setPortalAF").value=state.portals.af||DEFAULT_PORTALS.af;
+    renderPersonSelect(); benefitOptions(); renderQuickAdd();
+    renderDash(); renderClaims(); renderWellFull(); renderRef(); renderPeople();
+    if(dref) setSync("Live ✓");
+    initVoice();
+  }
+
+  // default date = today (no Date in some sandboxes, but browser is fine)
+  try{el("f-date").value=new Date().toISOString().slice(0,10);}catch(e){}
+  boot();
+})();
+</script>
+</body>
+</html>

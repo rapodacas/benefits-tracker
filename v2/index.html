@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E7C66">
+<title>Apodaca Benefits v2</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+  :root{--bg:#F4F6F5;--surface:#FFF;--surface2:#EEF3F1;--ink:#16211F;--ink2:#5B6B67;--hair:#DCE5E1;
+    --brand:#0E7C66;--brand2:#0A5F4E;--amber:#B7791F;--amberbg:#FBEFD3;--blue:#2563A8;--bluebg:#DCE9F7;
+    --green:#1E8E5A;--greenbg:#D8F0E2;--red:#C0432F;--redbg:#F7DFD9;--shadow:0 4px 18px rgba(16,60,50,.08);--fs:19px}
+  @media(prefers-color-scheme:dark){:root{--bg:#0C1513;--surface:#132420;--surface2:#0F1E1B;--ink:#EAF3F0;--ink2:#9FB4AE;--hair:#22403A;
+    --brand:#3FBF9F;--brand2:#57D2B3;--amber:#E3B45C;--amberbg:#3A2F14;--blue:#7BA9DD;--bluebg:#16283C;
+    --green:#4FCF8B;--greenbg:#123227;--red:#E68472;--redbg:#3A1C17;--shadow:0 6px 22px rgba(0,0,0,.4)}}
+  :root[data-theme="light"]{--bg:#F4F6F5;--surface:#FFF;--surface2:#EEF3F1;--ink:#16211F;--ink2:#5B6B67;--hair:#DCE5E1;--brand:#0E7C66;--brand2:#0A5F4E;--amber:#B7791F;--amberbg:#FBEFD3;--blue:#2563A8;--bluebg:#DCE9F7;--green:#1E8E5A;--greenbg:#D8F0E2;--red:#C0432F;--redbg:#F7DFD9;--shadow:0 4px 18px rgba(16,60,50,.08)}
+  :root[data-theme="dark"]{--bg:#0C1513;--surface:#132420;--surface2:#0F1E1B;--ink:#EAF3F0;--ink2:#9FB4AE;--hair:#22403A;--brand:#3FBF9F;--brand2:#57D2B3;--amber:#E3B45C;--amberbg:#3A2F14;--blue:#7BA9DD;--bluebg:#16283C;--green:#4FCF8B;--greenbg:#123227;--red:#E68472;--redbg:#3A1C17;--shadow:0 6px 22px rgba(0,0,0,.4)}
+  *{box-sizing:border-box}html{font-size:var(--fs);-webkit-text-size-adjust:100%}
+  body{margin:0;overflow-x:hidden;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{margin:0}button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inherit}
+  #banner{background:var(--amberbg);color:var(--amber);font-size:.72rem;font-weight:700;text-align:center;padding:6px 10px}
+  header.top{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  header.top .ey{font-size:.6rem;text-transform:uppercase;letter-spacing:.16em;opacity:.85;font-weight:800}
+  header.top h1{font-size:1rem;font-weight:800}
+  header.top button{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 9px;font-size:.78rem;font-weight:700}
+  main{max-width:680px;margin:0 auto;padding:14px 15px 110px}
+  .panel{display:none}.panel.active{display:block;animation:rise .28s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.panel.active{animation:none}}
+  h2.sec{font-size:1.08rem;font-weight:800;margin:15px 2px 9px;display:flex;align-items:center;gap:8px}
+  .card{background:var(--surface);border:1px solid var(--hair);border-radius:15px;box-shadow:var(--shadow);padding:14px 15px;margin-bottom:12px}
+  .muted{color:var(--ink2)}.small{font-size:.82rem}
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+  .tile{background:var(--surface);border:1px solid var(--hair);border-radius:13px;box-shadow:var(--shadow);padding:12px}
+  .tile .k{font-size:.62rem;text-transform:uppercase;letter-spacing:.07em;font-weight:800;color:var(--ink2)}
+  .tile .v{font-size:1.5rem;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums;line-height:1}
+  .tile.warn .v{color:var(--amber)}.tile.info .v{color:var(--blue)}.tile.good .v{color:var(--green)}.tile.bad .v{color:var(--red)}
+  label.fld{display:block;margin-bottom:10px}
+  label.fld .lb{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2);margin-bottom:4px;display:block}
+  .in{width:100%;padding:11px 12px;border:1px solid var(--hair);border-radius:11px;background:var(--surface2);color:var(--ink);font-size:.9rem}
+  textarea.in{min-height:120px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn{border:none;background:var(--brand);color:#fff;font-weight:800;padding:12px 15px;border-radius:12px;font-size:.92rem;width:100%}
+  .btn.sec{background:var(--surface2);color:var(--ink);border:1px solid var(--hair)}
+  .btn.sm{width:auto;padding:8px 12px;font-size:.8rem}
+  .seg{display:flex;gap:6px;overflow-x:auto;padding:2px;margin-bottom:8px}
+  .seg button{flex:none;border:1px solid var(--hair);background:var(--surface);color:var(--ink2);font-weight:700;font-size:.82rem;padding:8px 12px;border-radius:999px;white-space:nowrap}
+  .seg button.on{color:#fff;border-color:transparent}
+  .mic{width:100%;border:none;border-radius:15px;padding:16px;font-size:1rem;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--brand),var(--brand2));display:flex;align-items:center;justify-content:center;gap:10px}
+  .mic.live{background:linear-gradient(135deg,var(--red),#8f2e1f)}
+  .heard{background:var(--surface2);border:1px solid var(--hair);border-radius:10px;padding:8px 11px;font-size:.82rem;margin-top:9px}
+  .scn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .scn{border:1px solid var(--hair);background:var(--surface2);color:var(--ink);border-radius:12px;padding:11px 9px;font-weight:700;font-size:.8rem;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+  .scn .i{font-size:1.4rem}
+  .pill{display:inline-block;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:3px 8px;border-radius:999px}
+  .pill.to_file{background:var(--amberbg);color:var(--amber)}.pill.filed{background:var(--bluebg);color:var(--blue)}
+  .pill.paid{background:var(--greenbg);color:var(--green)}.pill.denied{background:var(--redbg);color:var(--red)}
+  .pill.due{background:var(--redbg);color:var(--red)}.pill.soon{background:var(--amberbg);color:var(--amber)}.pill.cap{background:var(--redbg);color:var(--red)}
+  .ev{display:flex;gap:11px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--hair)}.ev:first-child{border-top:none}
+  .ev .who{flex:none;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-weight:800;color:#fff;font-size:.82rem}
+  .ev .mid{flex:1;min-width:0}.ev .lab{font-weight:700;font-size:.88rem;line-height:1.2}.ev .meta{font-size:.72rem;color:var(--ink2);margin-top:2px}
+  .ev .amt{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .ev .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+  .ev .acts button{font-size:.68rem;font-weight:700;border:1px solid var(--hair);background:var(--surface2);color:var(--ink);border-radius:8px;padding:5px 8px}
+  .docpanel{margin-top:8px;padding:9px;background:var(--surface2);border:1px solid var(--hair);border-radius:10px}
+  .docpanel .drow{display:flex;align-items:center;gap:8px;font-size:.78rem;padding:3px 0}
+  .docpanel a{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .stackrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--hair)}.stackrow:first-child{border-top:none}
+  .stackrow input[type=checkbox]{width:18px;height:18px;flex:none;accent-color:var(--brand)}.stackrow .pl{flex:1;min-width:0}
+  .stackrow .pol{font-size:.64rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--ink2)}
+  .stackrow .bn{font-size:.84rem;font-weight:600}.stackrow .am{font-weight:800;color:var(--brand);font-variant-numeric:tabular-nums}
+  .filter{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;padding:2px}
+  .chip{flex:none;border:1px solid var(--hair);background:var(--surface);color:var(--ink2);font-weight:700;font-size:.76rem;padding:7px 11px;border-radius:999px;white-space:nowrap}.chip.on{background:var(--brand);color:#fff;border-color:transparent}
+  .wdot{display:flex;align-items:center;gap:10px;border:1px solid var(--hair);border-radius:12px;padding:10px 12px;background:var(--surface2);margin-bottom:8px}
+  .wdot .ck{width:24px;height:24px;border-radius:50%;border:2px solid var(--green);display:grid;place-items:center;color:#fff;font-weight:900;flex:none}
+  .wdot.done{background:var(--greenbg)}.wdot.done .ck{background:var(--green)}
+  .wdot .nm{font-weight:700;font-size:.86rem}.wdot .sub{font-size:.72rem;color:var(--ink2)}
+  .wdot button{margin-left:auto;border:none;background:var(--brand);color:#fff;font-weight:700;font-size:.74rem;padding:6px 10px;border-radius:8px}
+  .empty{text-align:center;color:var(--ink2);font-style:italic;padding:20px 10px;font-size:.86rem}
+  nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:space-around;background:var(--surface);border-top:1px solid var(--hair);padding:7px 2px calc(7px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px rgba(16,60,50,.1)}
+  nav.tabs button{flex:1;border:none;background:none;color:var(--ink2);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.58rem;font-weight:800;text-transform:uppercase;padding:3px 1px}
+  nav.tabs button .ic{font-size:1.25rem;line-height:1}nav.tabs button.active{color:var(--brand)}
+  #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:none;align-items:center;justify-content:center;padding:24px}#gate.show{display:flex}
+  #gate .box{max-width:420px;width:100%;background:var(--surface);border:1px solid var(--hair);border-radius:20px;box-shadow:var(--shadow);padding:26px 22px;text-align:center}
+  #gate .lock{font-size:2.3rem}#gate h2{font-size:1.2rem;font-weight:800;margin:8px 0 6px}#gate p{color:var(--ink2);font-size:.86rem;line-height:1.5;margin:0 0 16px}
+  .gv{display:none}.gv.on{display:block}
+  :focus-visible{outline:3px solid var(--brand);outline-offset:2px}a{color:var(--brand)}
+</style>
+</head>
+<body>
+<div id="banner">🔒 v2 · Google sign-in, Raoul &amp; Roxy only · your data stays in your private Firebase · verify amounts vs. certificate</div>
+<header class="top">
+  <div><div class="ey">Apodaca Benefits · v2</div><h1>Events · Visits · Claims</h1></div>
+  <div style="display:flex;gap:7px"><select id="yearSel" class="in" style="width:auto;padding:6px 7px"></select><button id="themeBtn">◐</button></div>
+</header>
+<main>
+  <section class="panel active" id="p-home">
+    <div class="tiles">
+      <div class="tile bad"><div class="k">Due soon / overdue</div><div class="v" id="s-due">0</div><div class="small muted">claims to file</div></div>
+      <div class="tile warn"><div class="k">To file $</div><div class="v" id="s-tofile">$0</div><div class="small muted" id="s-tofile-n">0</div></div>
+      <div class="tile info"><div class="k">Filed · pending</div><div class="v" id="s-filed">$0</div><div class="small muted" id="s-filed-n">0</div></div>
+      <div class="tile good"><div class="k">Paid this year</div><div class="v" id="s-paid">$0</div><div class="small muted" id="s-paid-n">0</div></div>
+    </div>
+    <h2 class="sec">⏰ Deadlines</h2><div class="card" id="deadlineList"></div>
+    <h2 class="sec">Recent claims</h2><div class="card" id="recentList"></div>
+  </section>
+
+  <section class="panel" id="p-events">
+    <h2 class="sec">🩺 New medical event</h2>
+    <div class="card">
+      <div class="lb small" style="font-weight:800;color:var(--ink2);text-transform:uppercase">Who</div>
+      <div class="seg" id="ev-people"></div>
+      <div class="lb small" style="font-weight:800;color:var(--ink2);text-transform:uppercase;margin-top:4px">Type</div>
+      <div class="seg" id="ev-types"></div>
+      <label class="fld" style="margin-top:6px"><span class="lb">Title</span><input class="in" id="ev-title" placeholder="Slid into 2nd base · Annual physical · Broken wrist"></label>
+      <label class="fld"><span class="lb">Onset date</span><input class="in" id="ev-date" type="date"></label>
+      <button class="btn" id="ev-add">Create event</button>
+    </div>
+    <h2 class="sec">Events</h2><div id="eventList"></div>
+  </section>
+
+  <section class="panel" id="p-add">
+    <h2 class="sec">🎤 Quick add</h2>
+    <div class="card">
+      <button class="mic" id="micBtn"><span id="micIcon">🎤</span><span id="micLabel">Tap &amp; say a visit</span></button>
+      <p class="small muted" id="micHint" style="margin:8px 0 0;text-align:center">"Juliet ER" · "Scarlette X-ray" · "Roxy infusion"</p>
+      <div class="heard" id="heard" style="display:none"></div>
+      <div class="lb small" style="font-weight:800;color:var(--ink2);text-transform:uppercase;margin:12px 0 6px">Who</div>
+      <div class="seg" id="qa-people"></div>
+      <div class="lb small" style="font-weight:800;color:var(--ink2);text-transform:uppercase;margin:6px 0 6px">What happened — one tap files the stack</div>
+      <div class="scn-grid" id="qa-scn"></div>
+    </div>
+    <h2 class="sec">➕ Add visit manually</h2>
+    <div class="card">
+      <label class="fld"><span class="lb">Event</span><select class="in" id="v-event"></select></label>
+      <div class="row2">
+        <label class="fld"><span class="lb">Date</span><input class="in" id="v-date" type="date"></label>
+        <label class="fld"><span class="lb">Visit type</span><select class="in" id="v-type"></select></label>
+      </div>
+      <label class="fld"><span class="lb">Provider</span><input class="in" id="v-provider" list="providerList" placeholder="Clinic or hospital name"><datalist id="providerList"></datalist></label>
+      <div class="row2">
+        <label class="fld"><span class="lb">Out-of-pocket $</span><input class="in" id="v-oop" type="number" inputmode="decimal" placeholder="0"></label>
+        <label class="fld"><span class="lb">Miles (one way)</span><input class="in" id="v-miles" type="number" inputmode="decimal" placeholder="0"></label>
+      </div>
+      <label class="fld"><span class="lb">Notes</span><input class="in" id="v-notes" placeholder="Follow-up visit"></label>
+      <button class="btn" id="genBtn">Generate claim stack →</button>
+    </div>
+    <div class="card" id="stackCard" style="display:none"></div>
+  </section>
+
+  <section class="panel" id="p-claims">
+    <h2 class="sec">💳 Claims</h2>
+    <div class="filter" id="claimFilter">
+      <button class="chip on" data-f="all">All</button><button class="chip" data-f="to_file">To file</button>
+      <button class="chip" data-f="filed">Filed</button><button class="chip" data-f="paid">Paid</button><button class="chip" data-f="denied">Denied</button>
+    </div>
+    <div class="card" id="claimList"></div>
+  </section>
+
+  <section class="panel" id="p-well">
+    <h2 class="sec">🎗️ Wellness &amp; screenings</h2>
+    <div class="card"><p class="small muted" style="margin:0 0 4px">Guaranteed annual money for routine care you already get. Tap to log &amp; file — it creates the wellness visit + claim.</p>
+      <div class="tile good" style="margin:12px 0"><div class="k">Captured <span id="wYear"></span></div><div class="v" id="wCap">$0</div><div class="small muted" id="wOf">of $0 available</div></div>
+      <div id="wellList"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-setup">
+    <h2 class="sec">⚙️ People</h2><div class="card" id="peopleEdit"></div>
+    <h2 class="sec">🏥 Providers</h2>
+    <div class="card"><div id="providerEdit"></div>
+      <div style="display:flex;gap:8px;margin-top:8px"><input class="in" id="prov-new" placeholder="Add a provider…"><button class="btn sm" id="prov-add">Add</button></div></div>
+    <h2 class="sec">📄 Policies</h2><div class="card" id="policyList"></div>
+    <h2 class="sec">📥 Import cancer history (private)</h2>
+    <div class="card">
+      <p class="small muted" style="margin:0 0 8px">Paste your cancer-claim spreadsheet (CSV or tab-separated). It imports into <b>your</b> Firebase only — never the public code. Creates one cancer event + a visit per row + AF Cancer claims (filed rows = paid; claimable-but-unfiled = to&nbsp;file).</p>
+      <textarea class="in" id="csvBox" placeholder="Paste rows like:&#10;Visit,Type of Visit,Location,Owner,Claim Status,Post date,Notes,mileage,benefit&#10;Example,imaging,Clinic,Name,american fidelity-yes,1/15/2026,,10,$200&#10;…"></textarea>
+      <button class="btn sec sm" id="csvBtn" style="margin-top:8px">Import pasted rows</button>
+      <div class="small muted" id="csvResult" style="margin-top:6px"></div>
+    </div>
+    <div class="card">
+      <div class="lb small" style="font-weight:800;text-transform:uppercase;color:var(--ink2)">Account</div>
+      <p class="small muted" id="syncLine" style="margin:6px 0 10px">—</p>
+      <button class="btn sec sm" id="signout">Sign out</button>
+    </div>
+    <p class="small muted" style="text-align:center;line-height:1.5">Not affiliated with any insurer. Verify against certificates before filing.</p>
+  </section>
+</main>
+<nav class="tabs" id="tabs">
+  <button data-tab="home" class="active"><span class="ic">📊</span>Home</button>
+  <button data-tab="events"><span class="ic">🩺</span>Events</button>
+  <button data-tab="add"><span class="ic">➕</span>Add</button>
+  <button data-tab="claims"><span class="ic">💳</span>Claims</button>
+  <button data-tab="well"><span class="ic">🎗️</span>Wellness</button>
+  <button data-tab="setup"><span class="ic">⚙️</span>Setup</button>
+</nav>
+<div id="gate"><div class="box"><div class="lock">🔒</div>
+  <div class="gv on" id="gv-login"><h2>Apodaca Benefits v2</h2><p>Private to Raoul &amp; Roxy. Sign in with your Google account.</p>
+    <button class="btn" id="googleBtn">Sign in with Google</button><p id="loginErr" style="color:var(--red);font-size:.82rem;margin-top:12px;display:none"></p></div>
+  <div class="gv" id="gv-denied"><h2>Not authorized</h2><p><b id="deniedEmail"></b> isn't on the access list.</p><button class="btn sec" id="tryAnother">Use another account</button></div>
+</div></div>
+
+<script>
+(function(){
+  "use strict";
+  var firebaseConfig={apiKey:"AIzaSyB2l9ho3Hmb4TJIorQZSY27MoKVJbxxsEA",authDomain:"apartment-plan.firebaseapp.com",databaseURL:"https://apartment-plan-default-rtdb.firebaseio.com",projectId:"apartment-plan",storageBucket:"apartment-plan.firebasestorage.app",messagingSenderId:"500021660433",appId:"1:500021660433:web:fb65a2b823d995a9079ab0"};
+  var ROOT="benefits/v2";
+  var COLLS=["persons","providers","events","visits","claims","documents"];
+  var store={persons:{},providers:{},events:{},visits:{},claims:{},documents:{}};
+  var POLICIES=[],POLMAP={};
+  var auth=null,db=null,refs={},currentUser=null,seeded=false,rafR=null,year=2026;
+  var DEFAULT_PERSONS={u1:{name:"Raoul",role:"Employee"},u2:{name:"Roxy",role:"Spouse"},u3:{name:"Scarlette",role:"Child"},u4:{name:"Victoria",role:"Child"},u5:{name:"Juliet",role:"Child"}};
+  var PCOLOR={u1:"#0E7C66",u2:"#B7791F",u3:"#2563A8",u4:"#8E44AD",u5:"#C0432F"};
+  var EVENT_TYPES=[["accident","🩹 Accident"],["wellness","🎗️ Wellness"],["illness","🤒 Illness"],["cancer","🎀 Cancer"]];
+  var VISIT_TYPES=[
+    ["er","ER visit",[["sec-acc","acc-er"],["af-acc","afa-er"],["af-hosp","afh-er"]]],
+    ["urgent","Urgent care",[["sec-acc","acc-initial-visit"],["af-acc","afa-urgent"],["af-hosp","afh-outpt"]]],
+    ["office","Doctor / office visit",[["sec-acc","acc-initial-visit"],["af-acc","afa-urgent"],["af-hosp","afh-outpt"]]],
+    ["followup","Follow-up visit",[["sec-acc","acc-followup"],["af-acc","afa-followup"],["af-hosp","afh-outpt"]]],
+    ["imaging","X-ray / imaging",[["sec-acc","acc-xray"],["af-acc","afa-imaging"],["af-cancer","afc-imaging"]]],
+    ["concussion","Concussion",[["sec-acc","acc-concussion"],["af-acc","afa-concussion"]]],
+    ["stitches","Stitches / laceration",[["sec-acc","acc-lac-stitch"],["af-acc","afa-lac2"]]],
+    ["pt","Physical therapy",[["sec-acc","acc-therapy"],["af-acc","afa-pt"],["af-cancer","afc-pt"]]],
+    ["ambulance","Ambulance",[["sec-acc","acc-amb-ground"],["af-acc","afa-amb-ground"]]],
+    ["surgery","Surgery",[["sec-acc","acc-surg-out-t1"],["af-cancer","afc-surg"]]],
+    ["hospital","Hospital admission",[["sec-acc","acc-hosp-init"],["af-acc","afa-hosp-admit"],["af-hosp","afh-admit"]]],
+    ["wellness","Wellness / physical",[["sec-ci","ci-wellness"]]],
+    ["mammogram","Mammogram",[["sec-ci","ci-mammogram"],["af-cancer","afc-mammogram"]]],
+    ["cancerscreen","Cancer screening",[["af-cancer","afc-screen"]]],
+    ["infusion","Infusion / hormone",[["af-cancer","afc-hormone"]]],
+    ["radchemo","Radiation / chemo",[["af-cancer","afc-radchemo"]]],
+    ["sports","Sports-injury bonus",[["sec-acc","acc-sports"]]]
+  ];
+  var VTMAP={};VISIT_TYPES.forEach(function(v){VTMAP[v[0]]=v;});
+  // scenario -> {eventType, visitType}
+  var SCENARIOS=[
+    ["er","🚑","ER","accident","er"],["urgent","🏥","Urgent care","accident","urgent"],
+    ["imaging","🩻","X-ray","accident","imaging"],["followup","🩺","Follow-up","accident","followup"],
+    ["concussion","🤕","Concussion","accident","concussion"],["sports","⚾","Sports bonus","accident","sports"],
+    ["pt","🦵","Phys therapy","accident","pt"],["stitches","🩹","Stitches","accident","stitches"],
+    ["wellness","🎗️","Wellness","wellness","wellness"],["mammogram","🎀","Mammogram","wellness","mammogram"],
+    ["cancerscreen","🔬","Cancer screen","wellness","cancerscreen"],["infusion","💉","Infusion","cancer","infusion"]
+  ];
+  var VOICE=[["er",["emergency room","the er"," er ","e.r"]],["urgent",["urgent care","urgent"]],["imaging",["x-ray","xray","x ray","imaging","mri","ct scan"]],["followup",["follow up","follow-up","followup","recheck"]],["concussion",["concussion"]],["sports",["sports injury","sports"]],["pt",["physical therapy"," pt "]],["stitches",["stitches","laceration"]],["wellness",["wellness","physical","checkup","annual"]],["mammogram",["mammogram"]],["cancerscreen",["cancer screen","pap","colonoscopy"]],["infusion",["infusion","lupron","hormone","chemo"]]];
+  var ALIASES={juliet:["jules","julie"],victoria:["vicky","tori"],scarlette:["scarlet","scar"],roxy:["roxanne","mom","mama"],raoul:["dad","papa"]};
+
+  function el(id){return document.getElementById(id);}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+  function money(n){return "$"+Math.round(n||0).toLocaleString();}
+  function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+  function initials(n){return (n||"?").trim().slice(0,1).toUpperCase();}
+  function personName(id){var p=store.persons[id];return p?p.name:"?";}
+  function personColor(id){return PCOLOR[id]||"#777";}
+  function roxyId(){var k=Object.keys(store.persons).filter(function(id){return /rox/i.test(store.persons[id].name)||store.persons[id].role==="Spouse";});return k[0];}
+  function policyById(id){return POLMAP[id];}
+  function benefitByKey(pol,key){for(var i=0;i<pol.benefitSchedule.length;i++)if(pol.benefitSchedule[i].key===key)return pol.benefitSchedule[i];return null;}
+  function amtOf(pol,ben){var a=ben.amount;return (a&&typeof a==="object")?(pol.planTier==="low"?a.low:a.high):a;}
+  function today(){try{return new Date().toISOString().slice(0,10);}catch(e){return "2026-08-02";}}
+  function addDays(iso,n){try{var d=new Date(iso+"T00:00:00");d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}catch(e){return iso;}}
+  function daysBetween(a,b){try{return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/86400000);}catch(e){return 0;}}
+  function yr(iso){return (iso||"").slice(0,4);}
+
+  function effectiveOn(pol,date){ if(/continuous/i.test(pol.coverageNote||"")) return true; return (date||"")>=(pol.effectiveDate||"1900"); }
+  function eventTypeOk(pol,etype){
+    if(pol.type==="accident") return etype==="accident";
+    if(pol.type==="hospital-indemnity") return etype==="accident"||etype==="illness";
+    if(pol.type==="critical-illness") return etype==="wellness"||etype==="illness"||etype==="cancer";
+    if(pol.type==="cancer") return etype==="cancer"||etype==="wellness";
+    return true;
+  }
+  function generateStack(visit,event){
+    var vt=VTMAP[visit.visitType]; if(!vt)return [];
+    var out=[];
+    vt[2].forEach(function(pair){
+      var pol=policyById(pair[0]); if(!pol)return;
+      if((pol.coveredPersonIds||[]).indexOf(event.personId)<0)return;
+      if(!effectiveOn(pol,visit.date))return;
+      if(!eventTypeOk(pol,event.type))return;
+      var ben=benefitByKey(pol,pair[1]); if(!ben)return;
+      out.push({policyId:pol.id,insurer:pol.insurer,benefitKey:ben.key,benefitLabel:ben.label,expectedAmount:amtOf(pol,ben),cap:capState(pol,ben,event.personId,visit.date)});
+    });
+    return out;
+  }
+  function capState(pol,ben,personId,date){
+    var cap=(pol.caps||[]).filter(function(c){return c.benefitKey===ben.key;})[0];
+    if(!cap)return null;
+    var used=0;
+    Object.keys(store.claims).forEach(function(cid){var cl=store.claims[cid];if(cl.policyId!==pol.id||cl.benefitKey!==ben.key)return;
+      var v=store.visits[cl.visitId],e=v&&store.events[v.eventId];if(!v||!e||e.personId!==personId)return;
+      if(cap.period==="year"&&yr(v.date)!==yr(date))return;
+      if(cap.period==="month"&&(v.date||"").slice(0,7)!==(date||"").slice(0,7))return;
+      used++;});
+    return {limit:cap.limit,used:used,over:cap.limit?used>=cap.limit:false,period:cap.period};
+  }
+
+  function scheduleRender(){cancelAnimationFrame(rafR);rafR=requestAnimationFrame(render);}
+  function put(coll,id,obj){if(!db)return;db.ref(ROOT+"/"+coll+"/"+id).set(obj).then(function(){setSync("Saved ✓");}).catch(function(){setSync("Save error");});}
+  function del(coll,id){if(!db)return;db.ref(ROOT+"/"+coll+"/"+id).remove();}
+  function setSync(t){var s=el("syncLine");if(s)s.textContent=(currentUser?("Signed in as "+currentUser+" · "):"")+t;}
+  function ensureProvider(name){name=(name||"").trim();if(!name)return "";var found="";Object.keys(store.providers).forEach(function(id){if((store.providers[id].name||"").toLowerCase()===name.toLowerCase())found=id;});if(found)return found;var id=genId();put("providers",id,{name:name});return id;}
+
+  function loadPolicies(tries){
+    fetch("../data/policies.json",{cache:"no-store"}).then(function(r){if(!r.ok)throw new Error("http");return r.json();})
+      .then(function(j){POLICIES=j.policies||[];POLMAP={};POLICIES.forEach(function(p){POLMAP[p.id]=p;});scheduleRender();})
+      .catch(function(){if((tries||0)<4)setTimeout(function(){loadPolicies((tries||0)+1);},800);else scheduleRender();});
+  }
+  function showGate(v){el("gate").classList.add("show");["login","denied"].forEach(function(x){el("gv-"+x).classList.toggle("on",x===v);});}
+  function hideGate(){el("gate").classList.remove("show");}
+  function boot(){
+    if(!window.firebase){el("loginErr").textContent="Firebase failed to load — refresh.";el("loginErr").style.display="block";showGate("login");return;}
+    firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.database();showGate("login");loadPolicies(0);
+    auth.onAuthStateChanged(function(u){COLLS.forEach(function(c){if(refs[c])refs[c].off();});if(!u){currentUser=null;showGate("login");return;}currentUser=u.displayName||u.email;startDb();});
+  }
+  function startDb(){
+    COLLS.forEach(function(c){if(refs[c])refs[c].off();refs[c]=db.ref(ROOT+"/"+c);
+      refs[c].on("value",function(snap){store[c]=snap.val()||{};hideGate();if(c==="persons")maybeSeed();scheduleRender();},
+        function(){el("deniedEmail").textContent=(auth.currentUser&&auth.currentUser.email)||"";showGate("denied");COLLS.forEach(function(x){if(refs[x])refs[x].off();});});});
+  }
+  function maybeSeed(){if(seeded)return;if(store.persons&&Object.keys(store.persons).length)return;seeded=true;Object.keys(DEFAULT_PERSONS).forEach(function(id){put("persons",id,DEFAULT_PERSONS[id]);});}
+  el("googleBtn").addEventListener("click",function(){var p=new firebase.auth.GoogleAuthProvider();el("loginErr").style.display="none";auth.signInWithPopup(p).catch(function(e){if(e&&(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment")){try{auth.signInWithRedirect(p);}catch(_){}}else if(e&&e.code!=="auth/popup-closed-by-user"){el("loginErr").textContent=e.message;el("loginErr").style.display="block";}});});
+  el("tryAnother").addEventListener("click",function(){auth.signOut().then(function(){showGate("login");});});
+  el("signout").addEventListener("click",function(){auth.signOut();});
+
+  el("themeBtn").addEventListener("click",function(){var c=document.documentElement.getAttribute("data-theme");var d=c?c==="dark":matchMedia("(prefers-color-scheme:dark)").matches;document.documentElement.setAttribute("data-theme",d?"light":"dark");});
+  el("tabs").addEventListener("click",function(e){var b=e.target.closest("button[data-tab]");if(!b)return;var t=b.getAttribute("data-tab");Array.prototype.forEach.call(this.querySelectorAll("button"),function(x){x.classList.toggle("active",x===b);});["home","events","add","claims","well","setup"].forEach(function(p){el("p-"+p).classList.toggle("active",p===t);});window.scrollTo({top:0});});
+  el("yearSel").addEventListener("change",function(){year=parseInt(this.value,10);render();});
+
+  /* ---- new event form ---- */
+  var evPerson=null,evType="accident";
+  el("ev-add").addEventListener("click",function(){
+    if(!evPerson){alert("Pick who.");return;}
+    var id=genId();
+    put("events",id,{personId:evPerson,type:evType,title:(el("ev-title").value.trim()||EVENT_TYPES.filter(function(t){return t[0]===evType;})[0][1]),onsetDate:el("ev-date").value||today(),status:"open"});
+    el("ev-title").value="";setSync("Event created ✓");document.querySelector('[data-tab="add"]').click();
+  });
+  function renderEventForm(){
+    var seg=el("ev-people");if(seg.dataset.n!=String(Object.keys(store.persons).length)){seg.innerHTML="";Object.keys(store.persons).forEach(function(id){var b=document.createElement("button");b.textContent=store.persons[id].name;b.addEventListener("click",function(){evPerson=id;renderEventForm();});seg.appendChild(b);});seg.dataset.n=Object.keys(store.persons).length;}
+    Array.prototype.forEach.call(seg.children,function(b,i){var id=Object.keys(store.persons)[i];b.className=evPerson===id?"on":"";if(evPerson===id)b.style.background=personColor(id);else b.style.background="";});
+    var ts=el("ev-types");if(!ts.children.length){EVENT_TYPES.forEach(function(t){var b=document.createElement("button");b.textContent=t[1];b.addEventListener("click",function(){evType=t[0];renderEventForm();});ts.appendChild(b);});}
+    Array.prototype.forEach.call(ts.children,function(b,i){b.className=EVENT_TYPES[i][0]===evType?"on":"";b.style.background=EVENT_TYPES[i][0]===evType?"var(--brand)":"";});
+    if(!el("ev-date").value)el("ev-date").value=today();
+  }
+
+  /* ---- quick add (voice + scenarios) ---- */
+  var qaPerson=null;
+  function findOrCreateEvent(personId,etype,title){
+    var open=Object.keys(store.events).filter(function(id){var e=store.events[id];return e.personId===personId&&e.type===etype&&e.status!=="closed";});
+    if(open.length)return open[0];
+    var id=genId();put("events",id,{personId:personId,type:etype,title:title,onsetDate:today(),status:"open"});return id;
+  }
+  function runScenario(key){
+    var s=SCENARIOS.filter(function(x){return x[0]===key;})[0];if(!s||!qaPerson)return;
+    var eid=findOrCreateEvent(qaPerson,s[3],s[2]+" — "+today());
+    var visit={eventId:eid,date:today(),visitType:s[4],provider:"",providerId:"",outOfPocket:0,miles:0,notes:"quick add"};
+    openStack(visit,store.events[eid]||{personId:qaPerson,type:s[3]});
+    document.querySelector('[data-tab="add"]').click();
+  }
+  function renderQuickAdd(){
+    if(!qaPerson||!store.persons[qaPerson])qaPerson=Object.keys(store.persons)[0];
+    var seg=el("qa-people");if(seg.dataset.n!=String(Object.keys(store.persons).length)){seg.innerHTML="";Object.keys(store.persons).forEach(function(id){var b=document.createElement("button");b.textContent=store.persons[id].name;b.addEventListener("click",function(){qaPerson=id;renderQuickAdd();});seg.appendChild(b);});seg.dataset.n=Object.keys(store.persons).length;}
+    Array.prototype.forEach.call(seg.children,function(b,i){var id=Object.keys(store.persons)[i];b.className=qaPerson===id?"on":"";b.style.background=qaPerson===id?personColor(id):"";});
+    var g=el("qa-scn");if(!g.children.length){SCENARIOS.forEach(function(s){var b=document.createElement("button");b.className="scn";b.innerHTML='<span class="i">'+s[1]+'</span>'+s[2];b.addEventListener("click",function(){runScenario(s[0]);});g.appendChild(b);});}
+  }
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition,recog=null,listening=false,voiceInit=false;
+  function initVoice(){if(voiceInit)return;voiceInit=true;if(!SR){el("micBtn").style.display="none";el("micHint").textContent="Voice not supported here — tap a button below.";return;}
+    el("micBtn").addEventListener("click",function(){if(listening){try{recog.stop();}catch(e){}return;}recog=new SR();recog.lang="en-US";recog.interimResults=false;
+      recog.onstart=function(){listening=true;el("micBtn").classList.add("live");el("micLabel").textContent="Listening…";el("micIcon").textContent="🔴";};
+      recog.onend=function(){listening=false;el("micBtn").classList.remove("live");el("micLabel").textContent="Tap & say a visit";el("micIcon").textContent="🎤";};
+      recog.onresult=function(e){handleVoice((e.results[0][0].transcript||"").toLowerCase());};try{recog.start();}catch(e){}});
+  }
+  function handleVoice(t){
+    var mp=null;Object.keys(store.persons).forEach(function(id){var names=[store.persons[id].name.toLowerCase()].concat(ALIASES[store.persons[id].name.toLowerCase()]||[]);names.forEach(function(nm){if(nm&&t.indexOf(nm)>=0)mp=id;});});
+    var scn=null;for(var i=0;i<VOICE.length&&!scn;i++){var kws=VOICE[i][1];for(var j=0;j<kws.length;j++){if(t.indexOf(kws[j])>=0){scn=VOICE[i][0];break;}}}
+    if(mp)qaPerson=mp;renderQuickAdd();
+    var h=el("heard");h.style.display="block";var tags=[];if(mp)tags.push("<b>"+esc(personName(mp))+"</b>");if(scn)tags.push("<b>"+esc((SCENARIOS.filter(function(s){return s[0]===scn;})[0]||["","",scn])[2])+"</b>");
+    h.innerHTML='Heard: "'+esc(t)+'"'+(tags.length?" → "+tags.join(" · "):"");
+    if(scn&&qaPerson)runScenario(scn);else h.innerHTML+=" — pick below.";
+  }
+
+  /* ---- manual visit + stack ---- */
+  function fillVisitForm(){
+    var ev=el("v-event");var cur=ev.value;ev.innerHTML="";var evs=Object.keys(store.events);
+    if(!evs.length){var o=document.createElement("option");o.value="";o.textContent="(create an event first, Events tab)";ev.appendChild(o);}
+    evs.forEach(function(id){var e=store.events[id];var o=document.createElement("option");o.value=id;o.textContent=personName(e.personId)+" — "+(e.title||e.type)+" ["+e.type+"]";ev.appendChild(o);});
+    if(cur)ev.value=cur;
+    var vt=el("v-type");if(!vt.children.length)VISIT_TYPES.forEach(function(v){var o=document.createElement("option");o.value=v[0];o.textContent=v[1];vt.appendChild(o);});
+    var dl=el("providerList");dl.innerHTML="";Object.keys(store.providers).forEach(function(id){var o=document.createElement("option");o.value=store.providers[id].name;dl.appendChild(o);});
+    if(!el("v-date").value)el("v-date").value=today();
+  }
+  el("genBtn").addEventListener("click",function(){
+    var eid=el("v-event").value;var e=store.events[eid];if(!e){alert("Pick an event (create one on Events tab).");return;}
+    var visit={eventId:eid,date:el("v-date").value||today(),visitType:el("v-type").value,provider:el("v-provider").value.trim(),outOfPocket:parseFloat(el("v-oop").value)||0,miles:parseFloat(el("v-miles").value)||0,notes:el("v-notes").value.trim()};
+    openStack(visit,e);
+  });
+  function openStack(visit,e){
+    var stack=generateStack(visit,e);var card=el("stackCard");card.style.display="block";
+    var rows=stack.map(function(s){return {s:s,on:!(s.cap&&s.cap.over)};});
+    function draw(){
+      var total=rows.reduce(function(a,r){return a+(r.on?r.s.expectedAmount:0);},0);
+      var body=rows.length?rows.map(function(r,i){var cap=r.s.cap?(r.s.cap.over?'<span class="pill cap">cap '+r.s.cap.used+'/'+r.s.cap.limit+'</span>':'<span class="small muted">'+r.s.cap.used+'/'+r.s.cap.limit+' '+r.s.cap.period+'</span>'):'';
+        return '<label class="stackrow"><input type="checkbox" data-i="'+i+'"'+(r.on?" checked":"")+'><span class="pl"><span class="pol">'+esc(r.s.insurer.split(" ")[0])+' · '+esc(r.s.policyId)+'</span><br><span class="bn">'+esc(r.s.benefitLabel)+'</span> '+cap+'</span><span class="am">'+money(r.s.expectedAmount)+'</span></label>';}).join(""):'<div class="empty">No policy pays for this visit type on this event.</div>';
+      card.innerHTML='<h3 style="font-size:1rem;font-weight:800;margin:0 0 3px">'+esc(personName(e.personId))+' · '+esc((VTMAP[visit.visitType]||["",""])[1])+'</h3>'+
+        '<p class="small muted" style="margin:0 0 8px">File by <b>'+addDays(visit.date,90)+'</b> · '+esc(visit.date)+'</p>'+body+
+        (rows.length?('<div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0;font-weight:800"><span>Total to file</span><span style="font-size:1.3rem;color:var(--green)">'+money(total)+'</span></div><button class="btn" id="saveStack">Save visit + '+rows.filter(function(r){return r.on;}).length+' claim(s)</button>'):'')+
+        '<button class="btn sec sm" id="cancelStack" style="margin-top:8px">Cancel</button>';
+      card.querySelectorAll('input[type=checkbox]').forEach(function(cb){cb.addEventListener("change",function(){rows[this.getAttribute("data-i")].on=this.checked;draw();});});
+      if(el("saveStack"))el("saveStack").addEventListener("click",function(){saveVisit(visit,rows);});
+      el("cancelStack").addEventListener("click",function(){card.style.display="none";card.innerHTML="";});
+    }
+    draw();card.scrollIntoView({behavior:"smooth",block:"center"});
+  }
+  function saveVisit(visit,rows){
+    if(visit.provider){visit.providerId=ensureProvider(visit.provider);}
+    var vid=genId();put("visits",vid,visit);var n=0;
+    rows.forEach(function(r){if(!r.on)return;var cid=genId();put("claims",cid,{visitId:vid,policyId:r.s.policyId,benefitKey:r.s.benefitKey,benefitLabel:r.s.benefitLabel,expectedAmount:r.s.expectedAmount,status:"to_file",filedDate:"",filingDeadline:addDays(visit.date,90),payoutAmount:0,payoutDate:"",denialReason:""});n++;});
+    el("stackCard").style.display="none";el("stackCard").innerHTML="";["v-provider","v-notes","v-oop","v-miles"].forEach(function(id){el(id).value="";});
+    setSync("Saved visit + "+n+" claim(s) ✓");document.querySelector('[data-tab="claims"]').click();
+  }
+
+  /* ---- claims + documents ---- */
+  var claimFilter="all",expanded={};
+  el("claimFilter").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;claimFilter=b.getAttribute("data-f");Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b);});renderClaims();});
+  var NEXT={to_file:"filed",filed:"paid",paid:"to_file",denied:"to_file"};
+  function docsFor(claimId){return Object.keys(store.documents).filter(function(id){return store.documents[id].refType==="claim"&&store.documents[id].refId===claimId;});}
+  function claimRow(cid,cl,compact){
+    var v=store.visits[cl.visitId]||{},e=(v&&store.events[v.eventId])||{},pid=e.personId;
+    var dl=cl.filingDeadline?daysBetween(today(),cl.filingDeadline):null;var dlTag="";
+    if(cl.status==="to_file"&&dl!=null){if(dl<0)dlTag='<span class="pill due">overdue</span>';else if(dl<=14)dlTag='<span class="pill soon">'+dl+'d left</span>';}
+    var docs=docsFor(cid);
+    var row=document.createElement("div");row.className="ev";
+    var acts=compact?"":'<div class="acts"><button data-a="cycle">→ '+({to_file:"Filed",filed:"Paid",paid:"Reopen",denied:"Reopen"}[cl.status])+'</button><button data-a="deny">Denied</button><button data-a="docs">📎 '+docs.length+'</button><button data-a="del">✕</button></div>';
+    row.innerHTML='<span class="who" style="background:'+personColor(pid)+'">'+initials(personName(pid))+'</span><div class="mid"><div class="lab">'+esc(cl.benefitLabel)+'</div>'+
+      '<div class="meta">'+esc(personName(pid))+' · '+esc(e.title||e.type||"")+(v.date?" · "+v.date:"")+' · '+esc(cl.policyId)+'</div>'+
+      '<div style="margin-top:5px"><span class="pill '+cl.status+'">'+cl.status.replace("_"," ")+(cl.status==="paid"&&cl.payoutAmount?" "+money(cl.payoutAmount):"")+'</span> '+dlTag+'</div>'+acts+'<div class="docwrap"></div></div><div class="amt">'+money(cl.expectedAmount)+'</div>';
+    if(!compact){
+      row.querySelector('[data-a="cycle"]').addEventListener("click",function(){var ns=NEXT[cl.status]||"to_file";var p=Object.assign({},cl,{status:ns});if(ns==="filed"&&!p.filedDate)p.filedDate=today();if(ns==="paid"&&!p.payoutAmount){p.payoutAmount=cl.expectedAmount;p.payoutDate=today();}put("claims",cid,p);});
+      row.querySelector('[data-a="deny"]').addEventListener("click",function(){var r=prompt("Denial reason (optional):","");put("claims",cid,Object.assign({},cl,{status:"denied",denialReason:r||""}));});
+      row.querySelector('[data-a="del"]').addEventListener("click",function(){if(confirm("Delete claim?")){docs.forEach(function(d){del("documents",d);});del("claims",cid);}});
+      row.querySelector('[data-a="docs"]').addEventListener("click",function(){expanded[cid]=!expanded[cid];renderClaims();});
+      if(expanded[cid]){
+        var w=row.querySelector(".docwrap");var html='<div class="docpanel">';
+        docs.forEach(function(did){var d=store.documents[did];html+='<div class="drow"><a href="'+esc(d.driveUrl)+'" target="_blank" rel="noopener">'+esc(d.kind)+(d.label?" · "+esc(d.label):"")+'</a><button data-del="'+did+'" style="border:none;background:none;color:var(--red)">✕</button></div>';});
+        html+='<div style="display:flex;gap:6px;margin-top:6px"><select class="in" style="width:auto;padding:6px" id="dk-'+cid+'"><option>EOB</option><option>Bill</option><option>Doctor note</option><option>Receipt</option></select><input class="in" style="flex:1;padding:6px" id="du-'+cid+'" placeholder="Paste Google Drive link"><button class="btn sm" id="da-'+cid+'">Add</button></div></div>';
+        w.innerHTML=html;
+        w.querySelectorAll("[data-del]").forEach(function(b){b.addEventListener("click",function(){del("documents",b.getAttribute("data-del"));});});
+        el("da-"+cid).addEventListener("click",function(){var url=el("du-"+cid).value.trim();if(!url)return;put("documents",genId(),{refType:"claim",refId:cid,kind:el("dk-"+cid).value,driveUrl:url,label:"",addedDate:today()});});
+      }
+    }
+    return row;
+  }
+  function claimIdsSorted(){var ids=Object.keys(store.claims);ids.sort(function(a,b){var va=store.visits[store.claims[a].visitId]||{},vb=store.visits[store.claims[b].visitId]||{};return (vb.date||"").localeCompare(va.date||"");});return ids;}
+  function renderClaims(){var list=el("claimList");var ids=claimIdsSorted();if(claimFilter!=="all")ids=ids.filter(function(id){return store.claims[id].status===claimFilter;});
+    if(!ids.length){list.innerHTML='<div class="empty">No claims yet. Use Quick add or Add visit.</div>';return;}list.innerHTML="";ids.forEach(function(id){list.appendChild(claimRow(id,store.claims[id],false));});}
+
+  /* ---- events list ---- */
+  function renderEvents(){var w=el("eventList");var ids=Object.keys(store.events);
+    if(!ids.length){w.innerHTML='<div class="empty">No events yet.</div>';return;}
+    ids.sort(function(a,b){return (store.events[b].onsetDate||"").localeCompare(store.events[a].onsetDate||"");});w.innerHTML="";
+    ids.forEach(function(id){var e=store.events[id];var vids=Object.keys(store.visits).filter(function(vid){return store.visits[vid].eventId===id;});var cids=Object.keys(store.claims).filter(function(cid){var v=store.visits[store.claims[cid].visitId];return v&&v.eventId===id;});var paid=cids.reduce(function(a,cid){var c=store.claims[cid];return a+(c.status==="paid"?(c.payoutAmount||c.expectedAmount):0);},0);
+      var card=document.createElement("div");card.className="card";card.innerHTML='<div style="display:flex;gap:11px;align-items:flex-start"><span class="who" style="background:'+personColor(e.personId)+'">'+initials(personName(e.personId))+'</span><div style="flex:1"><div class="lab" style="font-weight:800">'+esc(e.title||e.type)+'</div><div class="meta">'+esc(personName(e.personId))+' · '+esc(e.type)+' · onset '+(e.onsetDate||"?")+'</div><div class="meta">'+vids.length+' visit(s) · '+cids.length+' claim(s) · '+money(paid)+' paid</div></div><button class="btn sec sm" data-del="'+id+'">✕</button></div>';
+      card.querySelector("[data-del]").addEventListener("click",function(){if(confirm("Delete event + its visits/claims?")){cids.forEach(function(cid){del("claims",cid);});vids.forEach(function(vid){del("visits",vid);});del("events",id);}});w.appendChild(card);});}
+
+  /* ---- wellness ---- */
+  function wellnessItems(){
+    var out=[];var rx=roxyId();
+    Object.keys(store.persons).forEach(function(id){out.push({person:id,who:personName(id),label:"Securian wellness screening",amt:100,vt:"wellness",bk:"ci-wellness",etype:"wellness"});});
+    if(rx){out.push({person:rx,who:personName(rx),label:"Securian mammogram",amt:250,vt:"mammogram",bk:"ci-mammogram",etype:"wellness"});
+      out.push({person:rx,who:personName(rx),label:"AF cancer screening",amt:60,vt:"cancerscreen",bk:"afc-screen",etype:"wellness"});
+      out.push({person:rx,who:personName(rx),label:"AF mammography",amt:150,vt:"mammogram",bk:"afc-mammogram",etype:"wellness"});}
+    return out;
+  }
+  function wellnessClaimed(it){ // is there a claim for this benefit for this person this year?
+    return Object.keys(store.claims).some(function(cid){var cl=store.claims[cid];if(cl.benefitKey!==it.bk)return false;var v=store.visits[cl.visitId],e=v&&store.events[v.eventId];return v&&e&&e.personId===it.person&&yr(v.date)===String(year);});
+  }
+  function logWellness(it){
+    var eid=findOrCreateEvent(it.person,"wellness","Wellness "+year);
+    var visit={eventId:eid,date:today(),visitType:it.vt,provider:"",providerId:"",outOfPocket:0,miles:0,notes:"wellness"};
+    openStack(visit,store.events[eid]||{personId:it.person,type:"wellness"});document.querySelector('[data-tab="add"]').click();
+  }
+  function renderWellness(){
+    el("wYear").textContent=year;var items=wellnessItems();var avail=items.reduce(function(a,x){return a+x.amt;},0);
+    var cap=items.reduce(function(a,x){return a+(wellnessClaimed(x)?x.amt:0);},0);
+    el("wCap").textContent=money(cap);el("wOf").textContent="of "+money(avail)+" available";
+    var w=el("wellList");w.innerHTML="";
+    items.forEach(function(it){var done=wellnessClaimed(it);var d=document.createElement("div");d.className="wdot"+(done?" done":"");
+      d.innerHTML='<span class="ck">'+(done?"✓":"")+'</span><span><span class="nm">'+esc(it.who)+'</span><br><span class="sub">'+esc(it.label)+' · '+money(it.amt)+(done?" · logged":"")+'</span></span>'+(done?"":'<button>Log &amp; file</button>');
+      if(!done)d.querySelector("button").addEventListener("click",function(){logWellness(it);});w.appendChild(d);});
+  }
+
+  /* ---- people + providers + policies ---- */
+  function renderPeople(){var w=el("peopleEdit");w.innerHTML="";Object.keys(store.persons).forEach(function(id,i){var p=store.persons[id];var row=document.createElement("div");row.style.cssText="display:flex;gap:10px;align-items:center;padding:8px 0;border-top:"+(i?"1px solid var(--hair)":"none");row.innerHTML='<span class="who" style="background:'+personColor(id)+';width:30px;height:30px">'+initials(p.name)+'</span><input class="in" style="flex:1" value="'+esc(p.name)+'"><span class="small muted">'+esc(p.role)+'</span>';row.querySelector("input").addEventListener("change",function(){put("persons",id,Object.assign({},p,{name:this.value.trim()||"?"}));});w.appendChild(row);});}
+  el("prov-add").addEventListener("click",function(){var n=el("prov-new").value.trim();if(!n)return;ensureProvider(n);el("prov-new").value="";});
+  function renderProviders(){var w=el("providerEdit");var ids=Object.keys(store.providers);if(!ids.length){w.innerHTML='<div class="small muted">No providers yet — added automatically when you type one on a visit.</div>';return;}w.innerHTML="";ids.forEach(function(id){var row=document.createElement("div");row.style.cssText="display:flex;gap:8px;align-items:center;padding:5px 0";row.innerHTML='<span style="flex:1">'+esc(store.providers[id].name)+'</span><button class="btn sec sm" data-d="'+id+'">✕</button>';row.querySelector("[data-d]").addEventListener("click",function(){del("providers",id);});w.appendChild(row);});}
+  function renderPolicies(){var w=el("policyList");if(!POLICIES.length){w.innerHTML='<div class="empty">Policies didn’t load. <button class="btn sec sm" id="reloadPol">Reload</button></div>';var b=el("reloadPol");if(b)b.addEventListener("click",function(){loadPolicies(0);});return;}
+    w.innerHTML=POLICIES.map(function(p,i){var cov=(p.coveredPersonIds||[]).length===5?"all 5":(p.coveredPersonIds||[]).map(personName).join(", ");return '<div style="padding:9px 0;'+(i?"border-top:1px solid var(--hair)":"")+'"><div style="font-weight:700;font-size:.9rem">'+esc(p.name)+'</div><div class="small muted">'+esc(p.insurer.split(" ")[0])+' · covers '+esc(cov)+' · eff '+esc(p.effectiveDate)+' · '+p.benefitSchedule.length+' benefits · file &lt;'+p.filingWindowDays+'d</div></div>';}).join("");}
+
+  /* ---- CSV import (private) ---- */
+  function csvCells(l){var o=[],c="",q=false;for(var i=0;i<l.length;i++){var ch=l[i];if(ch==='"')q=!q;else if((ch===","||ch==="\t")&&!q){o.push(c);c="";}else c+=ch;}o.push(c);return o;}
+  function mapCancerBenefit(type,note){type=(type||"").toLowerCase();note=(note||"").toLowerCase();
+    if(/mammogram/.test(type))return {bk:"afc-mammogram",amt:150};
+    if(/ultrasound|biopsy|\blabs\b|\bmri\b|x-ray|imag/.test(type))return {bk:"afc-imaging",amt:200};
+    if(/surgery/.test(type))return {bk:"afc-surg",amt:400};
+    if(/lupron|infusion|hormone/.test(type)||/lupron/.test(note))return {bk:"afc-hormone",amt:50};
+    if(/physical therapy|(^|[^a-z])pt([^a-z]|$)/.test(type))return {bk:"afc-pt",amt:25};
+    if(/radiation|chemo/.test(type))return {bk:"afc-radchemo",amt:300};
+    if(/cancer screen|screening/.test(type))return {bk:"afc-screen",amt:60};
+    return null;
+  }
+  function isoDate(d){var m=(d||"").match(/(\d+)\/(\d+)\/(\d{4})/);return m?m[3]+"-"+String(m[1]).padStart(2,"0")+"-"+String(m[2]).padStart(2,"0"):"";}
+  el("csvBtn").addEventListener("click",function(){
+    var rx=roxyId();if(!rx){alert("No 'Roxy' person found.");return;}
+    var lines=el("csvBox").value.split(/\r?\n/).filter(function(l){return l.trim();});if(!lines.length)return;
+    if(/type of visit|claim status|post date/i.test(lines[0]))lines=lines.slice(1);
+    var eid=findOrCreateEvent(rx,"cancer","Cancer");
+    var vN=0,cN=0;
+    lines.forEach(function(l){var c=csvCells(l);var type=c[1]||c[0],status=(c[4]||"").toLowerCase(),date=isoDate(c[5]),notes=c[6]||"",miles=parseFloat(c[7])||0,bnote=c.slice(8).join(" ");
+      if(!date)return;var vid=genId();put("visits",vid,{eventId:eid,date:date,visitType:"office",provider:(c[2]||"").trim(),providerId:ensureProvider((c[2]||"").trim()),outOfPocket:0,miles:miles,notes:(type+" "+notes).trim()});vN++;
+      var mb=mapCancerBenefit(type,notes);if(!mb)return;var dol=(bnote.match(/\$\s?([0-9]+)/)||[])[1];var amt=dol?parseInt(dol,10):mb.amt;
+      var st=/yes/.test(status)?"paid":"to_file";
+      put("claims",genId(),{visitId:vid,policyId:"af-cancer",benefitKey:mb.bk,benefitLabel:(benefitByKey(policyById("af-cancer")||{benefitSchedule:[]},mb.bk)||{label:mb.bk}).label,expectedAmount:amt,status:st,filedDate:st==="paid"?date:"",filingDeadline:addDays(date,90),payoutAmount:st==="paid"?amt:0,payoutDate:st==="paid"?date:"",denialReason:""});cN++;});
+    el("csvResult").textContent="Imported "+vN+" visits, "+cN+" claims into the cancer event. ✓";el("csvBox").value="";
+  });
+
+  /* ---- dashboard ---- */
+  function renderHome(){var cl=store.claims,ids=Object.keys(cl);
+    function sum(f){return ids.filter(f).reduce(function(a,id){var c=cl[id];return a+(c.status==="paid"?(c.payoutAmount||c.expectedAmount):c.expectedAmount);},0);}
+    function inYear(id){var v=store.visits[cl[id].visitId];return v&&yr(v.date)===String(year);}
+    el("s-tofile").textContent=money(sum(function(id){return cl[id].status==="to_file";}));el("s-tofile-n").textContent=ids.filter(function(id){return cl[id].status==="to_file";}).length+" claims";
+    el("s-filed").textContent=money(sum(function(id){return cl[id].status==="filed";}));el("s-filed-n").textContent=ids.filter(function(id){return cl[id].status==="filed";}).length+" claims";
+    el("s-paid").textContent=money(sum(function(id){return cl[id].status==="paid"&&inYear(id);}));el("s-paid-n").textContent=ids.filter(function(id){return cl[id].status==="paid"&&inYear(id);}).length+" claims";
+    var due=ids.filter(function(id){var c=cl[id];return c.status==="to_file"&&c.filingDeadline&&daysBetween(today(),c.filingDeadline)<=14;});el("s-due").textContent=due.length;
+    var dlw=el("deadlineList");if(!due.length){dlw.innerHTML='<div class="empty">No filing deadlines within 14 days. 👍</div>';}else{due.sort(function(a,b){return (cl[a].filingDeadline||"").localeCompare(cl[b].filingDeadline||"");});dlw.innerHTML="";due.forEach(function(id){dlw.appendChild(claimRow(id,cl[id],true));});}
+    var recent=claimIdsSorted().slice(0,6);var rl=el("recentList");if(!recent.length){rl.innerHTML='<div class="empty">No claims yet — Quick add on the <b>Add</b> tab, or <b>Wellness</b> to log freebies.</div>';}else{rl.innerHTML="";recent.forEach(function(id){rl.appendChild(claimRow(id,cl[id],true));});}
+  }
+  function renderYear(){var s=el("yearSel");if(!s.children.length)[2024,2025,2026,2027].forEach(function(y){var o=document.createElement("option");o.value=y;o.textContent=y;s.appendChild(o);});s.value=year;}
+
+  function safe(fn,n){try{fn();}catch(e){console.error("render:"+n,e);}}
+  function render(){safe(renderYear,"year");safe(renderEventForm,"eventForm");safe(renderQuickAdd,"quickAdd");safe(fillVisitForm,"visitForm");safe(renderHome,"home");safe(renderEvents,"events");safe(renderClaims,"claims");safe(renderWellness,"wellness");safe(renderPeople,"people");safe(renderProviders,"providers");safe(renderPolicies,"policies");if(db&&currentUser)setSync("Live ✓");initVoice();}
+
+  boot();
+})();
+</script>
+</body>
+</html>
